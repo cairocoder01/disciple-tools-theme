@@ -5,6 +5,7 @@ if ( !defined( 'ABSPATH' ) ) {
 
 /**
  * Class Disciple_Tools_Notifications_Comments
+ * @package Disciple_Tools\Notifications
  */
 class Disciple_Tools_Notifications_Comments
 {

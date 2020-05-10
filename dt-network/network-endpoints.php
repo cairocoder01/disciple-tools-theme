@@ -1,17 +1,16 @@
 <?php
 /**
- * Rest Endpoints for the network feature of Disciple Tools
- *
- * @class      Disciple_Tools_Notifications
- * @version    0.1.0
- * @since      0.1.0
- * @package    Disciple_Tools
  */
 
 if ( !defined( 'ABSPATH' ) ) { exit; } // Exit if accessed directly.
 
 /**
- * Class Disciple_Tools_Network_Endpoints
+ * Rest Endpoints for the network feature of Disciple Tools
+ *
+ * @class      Disciple_Tools_Network_Endpoints
+ * @version    0.1.0
+ * @since      0.1.0
+ * @package  Disciple_Tools\Network
  */
 class Disciple_Tools_Network_Endpoints
 {

@@ -1,22 +1,17 @@
 <?php
 
-/**
- * Disciple_Tools_Groups_Config
- * This class serves as master configuration and modification class to the groups post type within the admin screens.
- *
- * @class   Disciple_Tools_Config_Contacts
- * @version 0.1.0
- * @since   0.1.0
- * @package Disciple_Tools
- *
- */
-
 if ( !defined( 'ABSPATH' ) ) {
     exit;
 } // Exit if accessed directly
 
 /**
  * Class Disciple_Tools_Groups_Config
+ * This class serves as master configuration and modification class to the groups post type within the admin screens.
+ *
+ * @class   Disciple_Tools_Config_Contacts
+ * @version 0.1.0
+ * @since   0.1.0
+ * @package  Disciple_Tools\Posts\Groups
  */
 class Disciple_Tools_Groups_Config
 {

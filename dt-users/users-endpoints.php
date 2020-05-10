@@ -1,10 +1,7 @@
 <?php
 /**
- * Custom endpoints file
- */
-
-/**
- * Class Disciple_Tools_Users_Endpoints
+ * Custom endpoints
+ * @package  Disciple_Tools\Users
  */
 class Disciple_Tools_Users_Endpoints
 {

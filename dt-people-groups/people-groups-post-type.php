@@ -7,7 +7,7 @@ if ( !defined( 'ABSPATH' ) ) {
  * Disciple Tools Post Type Class
  * All functionality pertaining to post types in Disciple_Tools.
  *
- * @package    Disciple_Tools
+ * @package    Disciple_Tools\People_Groups
  * @author     Chasm.Solutions & Kingdom.Training
  * @since      0.1.0
  */

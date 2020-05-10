@@ -4,17 +4,14 @@ if ( !defined( 'ABSPATH' ) ) {
 } // Exit if accessed directly.
 
 /**
+ * Class Disciple_Tools_Contact_Post_Type
  * Disciple_Tools Plugin Contacts Post Type Class
  * All functionality pertaining to contacts post types in Disciple_Tools.
  *
- * @package  Disciple_Tools
+ * @package  Disciple_Tools\Posts\Contacts
  * @category Plugin
  * @author   Chasm.Solutions & Kingdom.Training
  * @since    0.1.0
- */
-
-/**
- * Class Disciple_Tools_Contact_Post_Type
  */
 class Disciple_Tools_Contact_Post_Type
 {

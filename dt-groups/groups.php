@@ -3,7 +3,7 @@
  * Contains create, update and delete functions for groups, wrapping access to
  * the database
  *
- * @package  Disciple_Tools
+ * @package  Disciple_Tools\Posts\Groups
  * @category Plugin
  * @author   Chasm.Solutions & Kingdom.Training
  * @since    0.1.0
@@ -15,6 +15,7 @@ if ( !defined( 'ABSPATH' ) ) {
 /**
  * Class Disciple_Tools_Contacts
  * Functions for creating, finding, updating or deleting contacts
+ * @package  Disciple_Tools\Posts\Groups
  */
 class Disciple_Tools_Groups extends Disciple_Tools_Posts
 {
@@ -378,17 +379,17 @@ class Disciple_Tools_Groups extends Disciple_Tools_Posts
               AND assigned_to.meta_key = 'assigned_to'
               AND assigned_to.meta_value = CONCAT( 'user-', " . $user_id . " )";
         //contacts subassigned to me
-        $subassigned_access = "INNER JOIN $wpdb->p2p as from_p2p 
-            ON ( from_p2p.p2p_to = a.ID 
-                AND from_p2p.p2p_type = 'contacts_to_subassigned' 
+        $subassigned_access = "INNER JOIN $wpdb->p2p as from_p2p
+            ON ( from_p2p.p2p_to = a.ID
+                AND from_p2p.p2p_type = 'contacts_to_subassigned'
                 AND from_p2p.p2p_from = " . $user_post. ")";
         //contacts shared with me
         $shared_access = "
-            INNER JOIN $wpdb->dt_share AS shares 
-            ON ( shares.post_id = a.ID  
+            INNER JOIN $wpdb->dt_share AS shares
+            ON ( shares.post_id = a.ID
                 AND shares.user_id = " . $user_id . "
                 AND a.ID NOT IN (
-                    SELECT assigned_to.post_id 
+                    SELECT assigned_to.post_id
                     FROM $wpdb->postmeta as assigned_to
                     WHERE a.ID = assigned_to.post_id
                       AND assigned_to.meta_key = 'assigned_to'
@@ -398,7 +399,7 @@ class Disciple_Tools_Groups extends Disciple_Tools_Posts
         $all_access = "";
         //contacts shared with me.
         if ( !self::can_view_all( "contacts" ) ){
-            $all_access = "INNER JOIN $wpdb->dt_share AS shares 
+            $all_access = "INNER JOIN $wpdb->dt_share AS shares
             ON ( shares.post_id = a.ID
                  AND shares.user_id = " . $user_id . " ) ";
         }
@@ -414,7 +415,7 @@ class Disciple_Tools_Groups extends Disciple_Tools_Posts
         $closed = "";
         if ( !$show_closed ){
             $closed = " INNER JOIN $wpdb->postmeta as status
-              ON ( a.ID=status.post_id 
+              ON ( a.ID=status.post_id
               AND status.meta_key = 'group_status'
               AND status.meta_value != 'inactive' )";
         }

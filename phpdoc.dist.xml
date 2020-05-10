@@ -9,9 +9,9 @@
   <files>
     <directory>dt-assets</directory>
     <directory>dt-contacts</directory>
-    <directory>dt-core</directory>
+<!--    <directory>dt-core</directory>-->
     <directory>dt-groups</directory>
-    <directory>dt-mapping</directory>
+<!--    <directory>dt-mapping</directory>-->
     <directory>dt-metrics</directory>
     <directory>dt-network</directory>
     <directory>dt-notifications</directory>

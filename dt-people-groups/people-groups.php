@@ -1,19 +1,16 @@
 <?php
-/**
- * Contains create, update and delete functions for people groups, wrapping access to
- * the database
- *
- * @package  Disciple_Tools
- * @category Plugin
- * @author   Chasm.Solutions & Kingdom.Training
- * @since    0.1.0
- */
 if ( !defined( 'ABSPATH' ) ) {
     exit;
 } // Exit if accessed directly.
 
 /**
- * Class Disciple_Tools_People_Groups
+ * Contains create, update and delete functions for people groups, wrapping access to
+ * the database
+ *
+ * @package  Disciple_Tools\People_Groups
+ * @category Plugin
+ * @author   Chasm.Solutions & Kingdom.Training
+ * @since    0.1.0
  */
 class Disciple_Tools_People_Groups
 {
@@ -135,9 +132,9 @@ class Disciple_Tools_People_Groups
         // check for duplicate and return fail install because of duplicate.
         global $wpdb;
         $duplicate = $wpdb->get_var( $wpdb->prepare( "
-            SELECT count(meta_id) 
-            FROM $wpdb->postmeta 
-            WHERE meta_key = 'ROP3' AND 
+            SELECT count(meta_id)
+            FROM $wpdb->postmeta
+            WHERE meta_key = 'ROP3' AND
             post_id IN ( SELECT ID FROM $wpdb->posts WHERE post_type = 'peoplegroups' ) AND
             meta_value = %s",
         $rop3 ) );

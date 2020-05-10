@@ -2,7 +2,7 @@
 /**
  * Presenter template for theme support
  *
- * @package  Disciple_Tools
+ * @package  Disciple_Tools\Notifications
  * @category Theme
  * @author   Chasm.Solutions & Kingdom.Training
  * @since    0.1.0

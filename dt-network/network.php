@@ -5,7 +5,7 @@
  * @class      Disciple_Tools_Notifications
  * @version    0.1.0
  * @since      0.1.0
- * @package    Disciple_Tools
+ * @package  Disciple_Tools\Network
  */
 
 if ( !defined( 'ABSPATH' ) ) {
@@ -213,6 +213,7 @@ Disciple_Tools_Network::instance();
 
 /**
  * Helper function to get the partner profile id.
+ * @package  Disciple_Tools\Network
  * @return mixed
  */
 function dt_get_partner_profile_id() {
@@ -225,6 +226,7 @@ function dt_get_partner_profile_id() {
 
 /**
  * Helper function to get the partner profile id.
+ * @package  Disciple_Tools\Network
  * @return mixed
  */
 function dt_get_partner_profile() {
@@ -236,7 +238,10 @@ function dt_get_partner_profile() {
 }
 
 
-// Begin Schedule daily cron build
+/**
+ * Begin Schedule daily cron build
+ * @package  Disciple_Tools\Network
+ */
 class Disciple_Tools_Cron_Snapshot_Scheduler {
 
     public function __construct() {
@@ -251,6 +256,10 @@ class Disciple_Tools_Cron_Snapshot_Scheduler {
     }
 }
 
+/**
+ * Class Disciple_Tools_Cron_Snapshot_Async
+ * @package  Disciple_Tools\Network
+ */
 class Disciple_Tools_Cron_Snapshot_Async extends Disciple_Tools_Async_Task {
 
     protected $action = 'dt_load_snapshot_report';
@@ -272,6 +281,10 @@ try {
 // End Schedule daily cron build
 
 
+/**
+ * Class Disciple_Tools_Snapshot_Report
+ * @package  Disciple_Tools\Network
+ */
 class Disciple_Tools_Snapshot_Report {
     public static function snapshot_report( $force_refresh = false ) {
 

@@ -11,11 +11,15 @@ if ( ! wp_next_scheduled( 'task_notifications' ) ) {
 add_action( 'task_notifications', 'set_task_notifications' );
 add_filter( 'dt_custom_notification_note', 'dt_custom_notification_note', 10, 2 );
 
+/**
+ * Set task notifications
+ * @package  Disciple_Tools\Workflows
+ */
 function set_task_notifications(){
     global $wpdb;
 
     $tasks = $wpdb->get_results("
-        SELECT * 
+        SELECT *
         FROM $wpdb->dt_post_user_meta pum
         WHERE pum.date <= NOW()
         AND meta_key = 'tasks'
@@ -69,7 +73,12 @@ function set_task_notifications(){
     }
 }
 
-
+/**
+ * @package  Disciple_Tools\Workflows
+ * @param $note
+ * @param $notification
+ * @return string
+ */
 function dt_custom_notification_note( $note, $notification ){
     if ( empty( $note ) && $notification["notification_name"] === "tasks" && $notification["field_value"] ) {
         $post = get_post( $notification["post_id"] );

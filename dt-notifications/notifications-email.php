@@ -7,7 +7,7 @@
  * @class   Disciple_Tools_Notifications_Email
  * @version 0.1.0
  * @since   0.1.0
- * @package Disciple_Tools
+ * @package Disciple_Tools\Notifications
  *
  */
 
@@ -25,6 +25,7 @@ if ( !defined( 'ABSPATH' ) ) {
  *     'content of the message'
  * );
  *
+ * @package Disciple_Tools\Notifications
  * @param $email
  * @param $subject
  * @param $message_plain_text
@@ -105,6 +106,7 @@ function dt_send_email( $email, $subject, $message_plain_text ) {
  *
  * This function also appends a link in the email body to the contact record.
  *
+ * @package Disciple_Tools\Notifications
  * @param string $email
  * @param int    $post_id
  * @param string $message_plain_text
@@ -127,6 +129,7 @@ function dt_send_email_about_post( string $email, int $post_id, string $message_
 
 /**
  * Class Disciple_Tools_Notifications_Email
+ * @package Disciple_Tools\Notifications
  */
 class Disciple_Tools_Notifications_Email extends Disciple_Tools_Async_Task
 {
@@ -192,6 +195,7 @@ class Disciple_Tools_Notifications_Email extends Disciple_Tools_Async_Task
 
 /**
  * This hook function listens for the prepared async process on every page load.
+ * @package Disciple_Tools\Notifications
  */
 function dt_load_async_email() {
     if ( isset( $_POST['_wp_nonce'] ) && wp_verify_nonce( sanitize_key( wp_unslash( $_POST['_wp_nonce'] ) ) ) && isset( $_POST['action'] ) && sanitize_key( wp_unslash( $_POST['action'] ) ) == 'dt_async_email_notification' ) {

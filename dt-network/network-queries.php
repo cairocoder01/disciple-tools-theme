@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * Class Disciple_Tools_Network_Queries
+ * @package  Disciple_Tools\Network
+ */
 class Disciple_Tools_Network_Queries {
 
     public static function contacts_current_state() : array  {
@@ -236,7 +240,7 @@ class Disciple_Tools_Network_Queries {
                    SELECT
                       count( DISTINCT object_id) as value
                     FROM $wpdb->dt_activity_log
-                    WHERE 
+                    WHERE
                         object_type = 'contacts'
                         AND object_subtype = 'baptism_date'
                         AND meta_value != ''
@@ -371,7 +375,7 @@ class Disciple_Tools_Network_Queries {
                         ON a.ID = c.post_id
                            AND c.meta_key = 'group_status'
                            AND c.meta_value = 'active'
-                    JOIN $wpdb->postmeta as b 
+                    JOIN $wpdb->postmeta as b
                       ON a.ID=b.post_id
                       AND b.meta_key = 'group_type'
                       AND ( b.meta_value = 'group' OR b.meta_value = 'church' )

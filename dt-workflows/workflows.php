@@ -6,6 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) { exit; } // Exit if accessed directly
  * Class Disciple_Tools_Workflows
  *
  * @since  1.0.0
+ * @package  Disciple_Tools\Workflows
  */
 class Disciple_Tools_Workflows {
 

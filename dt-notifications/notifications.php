@@ -7,7 +7,7 @@
  * @class      Disciple_Tools_Notifications
  * @version    0.1.0
  * @since      0.1.0
- * @package    Disciple_Tools
+ * @package    Disciple_Tools\Notifications
  * @author     Chasm.Solutions & Kingdom.Training
  */
 
@@ -17,6 +17,7 @@ if ( !defined( 'ABSPATH' ) ) {
 
 /**
  * @since 0.1.0
+ * @package Disciple_Tools\Notifications
  * @see   Disciple_Tools_Activity_Log_API::insert
  *
  * @param array $args
@@ -28,6 +29,7 @@ function dt_notification_insert( $args = [] ) {
 }
 
 /**
+ * @package Disciple_Tools\Notifications
  * @param array $args
  */
 function dt_notification_delete( $args = [] ) {
@@ -35,6 +37,7 @@ function dt_notification_delete( $args = [] ) {
 }
 
 /**
+ * @package Disciple_Tools\Notifications
  * @param array $args
  */
 function dt_notification_delete_by_post( $args = [] ) {
@@ -43,6 +46,7 @@ function dt_notification_delete_by_post( $args = [] ) {
 
 /**
  * Class Disciple_Tools_Notifications
+ * @package Disciple_Tools\Notifications
  */
 class Disciple_Tools_Notifications
 {

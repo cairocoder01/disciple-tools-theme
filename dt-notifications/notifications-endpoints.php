@@ -1,21 +1,17 @@
 <?php
 
+if ( !defined( 'ABSPATH' ) ) {
+    exit; // Exit if accessed directly
+}
+
 /**
  * Disciple_Tools_Notifications_Endpoints
  *
  * @class      Disciple_Tools_Notifications_Endpoints
  * @version    0.1.0
  * @since      0.1.0
- * @package    Disciple_Tools
+ * @package    Disciple_Tools\Notifications
  * @author     Chasm.Solutions & Kingdom.Training
- */
-
-if ( !defined( 'ABSPATH' ) ) {
-    exit; // Exit if accessed directly
-}
-
-/**
- * Class Disciple_Tools_Notifications_Endpoints
  */
 class Disciple_Tools_Notifications_Endpoints
 {

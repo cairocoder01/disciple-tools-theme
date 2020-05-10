@@ -1,11 +1,5 @@
 <?php
 /**
- * Contains create, update and delete functions for users, wrapping access to the database
- *
- * @package  Disciple_Tools
- * @category Plugin
- * @author   Chasm.Solutions & Kingdom.Training
- * @since    0.1.0
  */
 if ( !defined( 'ABSPATH' ) ) {
     exit;
@@ -13,7 +7,12 @@ if ( !defined( 'ABSPATH' ) ) {
 
 /**
  * Class Disciple_Tools_Users
- * Functions for creating, finding, updating or deleting contacts
+ * Functions for creating, finding, updating or deleting users, wrapping access to the database
+ *
+ * @package  Disciple_Tools\Users
+ * @category Plugin
+ * @author   Chasm.Solutions & Kingdom.Training
+ * @since    0.1.0
  */
 class Disciple_Tools_Users
 {

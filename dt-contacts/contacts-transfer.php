@@ -1,8 +1,8 @@
 <?php
 /**
- * Module for transferring contacts between DT sites
+ * Class Module for transferring contacts between DT sites
+ * @package  Disciple_Tools\Posts\Contacts
  */
-
 class Disciple_Tools_Contacts_Transfer
 {
 

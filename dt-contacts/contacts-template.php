@@ -2,7 +2,7 @@
 /**
  * Presenter template for theme support
  *
- * @package  Disciple_Tools
+ * @package  Disciple_Tools\Posts\Contacts
  * @category Plugin
  * @author   Chasm.Solutions & Kingdom.Training
  * @since    0.1.0
@@ -20,6 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) { exit; } // Exit if accessed directly.
  * If $return is true, then return the name instead of printing it. (Similar to
  * the $return argument in var_export.)
  *
+ * @package  Disciple_Tools\Posts\Contacts
  * @param  int  $contact_id
  * @param  bool $return
  * @return string
@@ -50,6 +51,7 @@ function dt_get_assigned_name( int $contact_id, bool $return = false ) {
 }
 
 /**
+ * @package  Disciple_Tools\Posts\Contacts
  * @param $contact_id
  *
  * @return array|mixed
@@ -62,6 +64,7 @@ function dt_get_users_shared_with( $contact_id ) {
 /**
  * Accepts types: key_select, multi_select, text, date, connection, location
  *
+ * @package  Disciple_Tools\Posts\Contacts
  * @param $field_key
  * @param $fields
  * @param $post

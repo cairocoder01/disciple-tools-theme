@@ -6,6 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /**
  * Class Disciple_Tools_Update_Needed
+ * @package  Disciple_Tools\Workflows
  */
 class Disciple_Tools_Update_Needed {
 
@@ -24,6 +25,10 @@ class Disciple_Tools_Update_Needed {
 
 }
 
+/**
+ * Class Disciple_Tools_Update_Needed_Async
+ * @package  Disciple_Tools\Workflows
+ */
 class Disciple_Tools_Update_Needed_Async extends Disciple_Tools_Async_Task {
 
     protected $action = 'dt_find_contacts_that_need_an_update';
@@ -53,7 +58,7 @@ class Disciple_Tools_Update_Needed_Async extends Disciple_Tools_Async_Task {
                     LEFT JOIN $wpdb->postmeta AS contact_type ON ( $wpdb->posts.ID = contact_type.post_id AND contact_type.meta_key = 'type' )
                     WHERE ( mt1.meta_value = '' OR mt1.meta_value = '0' OR mt1.meta_key IS NULL )
                     AND ( mt2.meta_key = 'overall_status' AND mt2.meta_value = %s )
-                    AND %d >= ( SELECT MAX( hist_time ) FROM $wpdb->dt_activity_log WHERE object_id = $wpdb->posts.ID and user_id != 0 ) 
+                    AND %d >= ( SELECT MAX( hist_time ) FROM $wpdb->dt_activity_log WHERE object_id = $wpdb->posts.ID and user_id != 0 )
                     AND ( mt4.meta_key = 'seeker_path' AND mt4.meta_value = %s )
                     AND $wpdb->posts.post_type = 'contacts' AND $wpdb->posts.post_status = 'publish'
                     AND $wpdb->posts.ID NOT IN (

@@ -5,6 +5,7 @@ if ( !defined( 'ABSPATH' ) ) {
 
 /**
  * Class Disciple_Tools_Contacts_Endpoints
+ * @package  Disciple_Tools\Posts\Contacts
  */
 class Disciple_Tools_Contacts_Endpoints
 {

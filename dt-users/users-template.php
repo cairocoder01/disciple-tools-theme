@@ -2,7 +2,7 @@
 /**
  * Presenter template for theme support
  *
- * @package  Disciple_Tools
+ * @package  Disciple_Tools\Users
  * @category Plugin
  * @author   Chasm.Solutions & Kingdom.Training
  * @since    0.1.0
@@ -33,6 +33,7 @@ if ( !defined( 'ABSPATH' ) ) {
  * )
  * )
  *
+ * @package Disciple_Tools\Users
  * @return array
  */
 function dt_get_user_associations() {
@@ -90,6 +91,7 @@ function dt_get_user_associations() {
  * )
  * )
  *
+ * @package Disciple_Tools\Users
  * @param $user_id
  *
  * @return array
@@ -158,6 +160,7 @@ function dt_get_team_contacts( $user_id ) {
 /**
  * Gets the current site defaults defined in the notifications config section in wp-admin
  *
+ * @package  Disciple_Tools\Users
  * @return array
  */
 function dt_get_site_notification_defaults() {
@@ -177,6 +180,7 @@ function dt_get_site_notification_defaults() {
 /**
  * Returns the site default user fields
  *
+ * @package  Disciple_Tools\Users
  * @return array
  */
 function dt_get_site_default_user_fields(): array
@@ -192,6 +196,7 @@ function dt_get_site_default_user_fields(): array
 /**
  * Returns the corresponding id for either user or contact.
  *
+ * @package  Disciple_Tools\Users
  * @param        $id
  * @param string $id_type
  *
@@ -210,6 +215,7 @@ function dt_get_associated_user_id( $id, $id_type = 'user' ) {
 /**
  * Echos user display name
  *
+ * @package  Disciple_Tools\Users
  * @param int $user_id
  */
 function dt_user_display_name( int $user_id ) {
@@ -219,6 +225,7 @@ function dt_user_display_name( int $user_id ) {
 /**
  * Returns user display name
  *
+ * @package  Disciple_Tools\Users
  * @param $user_id
  *
  * @return string|WP_Error
@@ -241,6 +248,11 @@ function dt_get_user_display_name( $user_id ) {
     return $display_name;
 }
 
+/**
+ * @package  Disciple_Tools\Users
+ * @param $user_meta
+ * @return int|string
+ */
 function dt_get_user_id_from_assigned_to( $user_meta ){
     $meta_array = explode( '-', $user_meta ); // Separate the type and id
     if ( isset( $meta_array[1] ) ) {
@@ -251,6 +263,7 @@ function dt_get_user_id_from_assigned_to( $user_meta ){
 
 
 /**
+ * @package  Disciple_Tools\Users
  * @param $profile_fields
  *
  * @return mixed
@@ -281,6 +294,7 @@ if ( is_admin() ) {
  * Compares the user_metadata array with the site user fields and returns a combined array limited to site_user_fields.
  * This is used in the theme template to display the user profile.
  *
+ * @package  Disciple_Tools\Users
  * @param array $usermeta
  *
  * @return array
@@ -318,6 +332,7 @@ function dt_build_user_fields_display( array $usermeta ): array
 /**
  * Expects the contact id, but can be given the user id and look up the contact id.
  *
+ * @package  Disciple_Tools\Users
  * @param int  $id
  * @param bool $is_user_id
  *
@@ -328,9 +343,9 @@ function dt_get_user_locations_list( int $id, $is_user_id = false ) {
 
     if ( $is_user_id ) {
         $id = $wpdb->get_var( $wpdb->prepare( "
-          SELECT post_id 
-          FROM $wpdb->postmeta 
-          WHERE meta_key = 'corresponds_to_user' 
+          SELECT post_id
+          FROM $wpdb->postmeta
+          WHERE meta_key = 'corresponds_to_user'
           AND meta_value = %d",
         $id ) );
     }
@@ -361,6 +376,7 @@ function dt_get_user_locations_list( int $id, $is_user_id = false ) {
 /**
  * Tests if a user notification is enabled.
  *
+ * @package  Disciple_Tools\Users
  *
  * @param string   $notification_name
  * @param string   $channel
@@ -394,6 +410,7 @@ function dt_user_notification_is_enabled( string $notification_name, string $cha
 /**
  * Get base user
  *
+ * @package  Disciple_Tools\Users
  * @param bool $id_only
  *
  * @return array|false|\WP_Error|\WP_User
