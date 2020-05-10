@@ -11,6 +11,6 @@ composer.phar
 CodeSniffer.conf
 phpcbf.phar
 phpcs.phar
-
+docs/api
 */development-only/*
 

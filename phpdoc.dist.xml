@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<phpdoc>
+  <parser>
+    <target>docs/api</target>
+  </parser>
+  <transformer>
+    <target>docs/api</target>
+  </transformer>
+  <files>
+    <directory>dt-assets</directory>
+    <directory>dt-contacts</directory>
+    <directory>dt-core</directory>
+    <directory>dt-groups</directory>
+    <directory>dt-mapping</directory>
+    <directory>dt-metrics</directory>
+    <directory>dt-network</directory>
+    <directory>dt-notifications</directory>
+    <directory>dt-people-groups</directory>
+    <directory>dt-posts</directory>
+    <directory>dt-users</directory>
+    <directory>dt-workflows</directory>
+    <ignore>dt-core/admin/*</ignore>
+    <ignore>dt-core/dependencies/*</ignore>
+    <ignore>dt-core/libraries/*</ignore>
+  </files>
+  <transformations>
+    <template name="./docs/templates/responsive-dt"/>
+  </transformations>
+</phpdoc>

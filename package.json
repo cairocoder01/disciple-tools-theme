@@ -48,7 +48,8 @@
     "styles": "gulp styles",
     "watch": "gulp watch",
     "browsersync": "gulp browsersync",
-    "update-foundation": "npm install foundation-sites"
+    "update-foundation": "npm install foundation-sites",
+    "docs": "vendor/bin/phpdoc"
   },
   "jshintConfig": {
     "globals": {
