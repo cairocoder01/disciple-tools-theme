@@ -3,6 +3,10 @@ if ( !defined( 'ABSPATH' ) ) {
     exit;
 }
 
+/**
+ * Class DT_Posts
+ * @package  Disciple_Tools\Posts
+ */
 class DT_Posts extends Disciple_Tools_Posts {
     public function __construct() {
         parent::__construct();

@@ -6,6 +6,7 @@ if ( !defined( 'ABSPATH' ) ) {
 
 /**
  * Class Disciple_Tools_Contacts
+ * @package  Disciple_Tools\Posts\Contacts
  */
 class Disciple_Tools_Contacts extends Disciple_Tools_Posts
 {

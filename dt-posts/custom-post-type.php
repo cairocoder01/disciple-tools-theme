@@ -4,6 +4,10 @@ if ( !defined( 'ABSPATH' ) ) {
     exit;
 } // Exit if accessed directly.
 
+/**
+ * Class Disciple_Tools_Post_Type_Template
+ * @package  Disciple_Tools\Posts
+ */
 class Disciple_Tools_Post_Type_Template {
 
     public $post_type;
