@@ -115,7 +115,7 @@ window.API = {
 
     create_group: fields => makeRequest('POST', 'group/create', fields),
 
-    search_users: query => makeRequest('GET', `users/get_users?s=${query}`),
+    search_users: query => makeRequest('GET', `users/get_users?s=${query}&site_links=1`),
 
     get_filters: () => makeRequest('GET', 'users/get_filters'),
 

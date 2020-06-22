@@ -128,7 +128,11 @@ class Disciple_Tools_Users_Endpoints
         if ( isset( $params["get_all"] )){
             $get_all = $params["get_all"] === "1";
         }
-        $users = Disciple_Tools_Users::get_assignable_users_compact( $search, $get_all );
+        $get_site_links = 0;
+        if ( isset( $params["site_links"] )){
+            $get_site_links = $params["site_links"] === "1";
+        }
+        $users = Disciple_Tools_Users::get_assignable_users_compact( $search, $get_all, $get_site_links );
 
         return $users;
     }

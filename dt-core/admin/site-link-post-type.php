@@ -177,6 +177,28 @@ if ( ! class_exists( 'Site_Link_System' ) ) {
         }
 
         /**
+         * GET A LIST OF SITES BY CONNECTION TYPE
+         *
+         * Submit the $type_name as an array of strings. ex. ['Contact Sharing', 'Contact Sending']
+         *
+         * @param array  $type_name
+         * @param string $format
+         *
+         * @return array
+         */
+        public static function get_list_of_sites( ) {
+          global $wpdb;
+
+          $results = $wpdb->get_results(
+            "SELECT ID as id, post_title as name
+                      FROM $wpdb->posts
+                      WHERE $wpdb->posts.post_type = 'site_link_system'
+                      AND $wpdb->posts.post_status = 'publish'", ARRAY_A ); //@phpcs:ignore
+
+          return $results;
+        }
+
+        /**
          * CREATE A TRANSFER TOKEN FOR A SITE
          * This method encrypts with md5 and the GMT date. So every day, this encryption will change. Using this method
          * requires that both of the servers have their timezone in Settings > General > Timezone correctly set.

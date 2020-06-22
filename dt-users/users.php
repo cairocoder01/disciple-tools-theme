@@ -57,7 +57,7 @@ class Disciple_Tools_Users
      *
      * @return array|\WP_Error
      */
-    public static function get_assignable_users_compact( string $search_string = null, $get_all = false ) {
+    public static function get_assignable_users_compact(string $search_string = null, $get_all = false, $get_site_links = false ) {
         if ( !current_user_can( "access_contacts" ) ) {
             return new WP_Error( __FUNCTION__, __( "No permissions to assign" ), [ 'status' => 403 ] );
         }
@@ -170,6 +170,19 @@ class Disciple_Tools_Users
             }
         }
 
+        if ( $get_site_links ) {
+          $all_site_links = Site_Link_System::get_list_of_sites();
+          foreach ( $all_site_links as $site_link ) {
+            if ( strpos( $site_link["name"], $search_string ) > -1 ) {
+              $list[] = [
+                "name" => $site_link['name'],
+                "ID" => "sl_" . $site_link['id'],
+                "avatar" => null,
+                "contact_id" => null,
+              ];
+            }
+          }
+        }
         function asc_meth( $a, $b ) {
             $a["name"] = strtolower( $a["name"] );
             $b["name"] = strtolower( $b["name"] );
