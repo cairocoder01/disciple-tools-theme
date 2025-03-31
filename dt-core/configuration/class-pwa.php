@@ -16,7 +16,6 @@
  *
  */
 
-
 /**
  * Class Disciple_Tools_PWA
  */
@@ -65,6 +64,24 @@ class Disciple_Tools_PWA
             $this->print_manifest_json();
             return;
         }
+
+        if ( 'service-worker.js' === $uri ) {
+            $this->print_service_worker();
+            return;
+        }
+    }
+
+    /**
+     * Handle "/service-worker.js" request.
+     *
+     * @since 1.0.0
+     */
+    private function print_service_worker() {
+
+        header( 'Content-Type: application/javascript; charset=utf-8' );
+        echo file_get_contents( $_SERVER['DOCUMENT_ROOT'].'/wp-content/themes/disciple-tools-theme/dt-assets/js/service-worker.js' );
+        
+        exit;
     }
 
     /**
@@ -143,6 +160,7 @@ class Disciple_Tools_PWA
 
     public function scripts() {
         // to add a custom install prompt, include this js.
-        // dt_theme_enqueue_script( 'pwa', 'dt-assets/js/pwa.js' );
+         dt_theme_enqueue_script( 'pwa', 'dt-assets/js/pwa.js' );
     }
+
 }

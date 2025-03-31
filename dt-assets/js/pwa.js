@@ -1,5 +1,32 @@
 // Reference: https://web.dev/learn/pwa/installation-prompt
 
+if ('serviceWorker' in navigator) {
+  Notification.requestPermission();
+  // Register a service worker hosted at the root of the
+  // site using the default scope.
+  navigator.serviceWorker.register('/service-worker.js').then(
+    (registration) => {
+      console.log('Service worker registration succeeded:', registration);
+    },
+    (error) => {
+      console.error(`Service worker registration failed: ${error}`);
+    },
+  );
+} else {
+  console.error('Service workers are not supported.');
+}
+
+
+navigator.serviceWorker.ready.then((registration) => {
+  registration.active.postMessage(
+    {
+      "nonce": window.wpApiShare.nonce,
+      "template_dir": window.wpApiShare.template_dir,
+    },
+  );
+});
+
+
 let deferredPrompt;
 window.addEventListener('beforeinstallprompt', (e) => {
   // Prevents the default mini-infobar or install dialog from appearing on mobile
