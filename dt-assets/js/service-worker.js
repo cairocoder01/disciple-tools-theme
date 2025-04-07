@@ -3,7 +3,7 @@ self.addEventListener("install", () => {
 });
 
 self.addEventListener('notificationclick', (event) => {
-  const linkURL = event.notification.data.link;
+  const linkURL = event.notification.data["link"];
 
   event.notification.close();
 
@@ -19,8 +19,26 @@ self.addEventListener('notificationclick', (event) => {
       }
     })
   );
+
+  const url = `/wp-json/dt/v1/notifications/mark_viewed/${event.notification.data["id"]}`;
+  fetch(url,{
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        "X-WP-Nonce": event.notification.data["nonce"],
+      },
+    })
+      .then((response) => {
+        return response.json();
+      })
+      .catch((reason) => {
+        console.log("reason:");
+        console.log(reason);
+      });
+  
 });
 
+let notificationRequest;
 addEventListener("message", (event) => {
 
   const url = '/wp-json/dt/v1/notifications/get_notifications';
@@ -31,109 +49,121 @@ addEventListener("message", (event) => {
     mentions: false,
   }
 
-  let last_checked = new Date();
-  event.waitUntil(setInterval(function() {
-    fetch(url,{
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json; charset=utf-8",
-        "X-WP-Nonce": event.data["nonce"],
-      },
-      body: JSON.stringify(payload),
-    })
-      .then((response) => {
-        return response.json();
+  let last_checked = new Date(0);
+    if (notificationRequest) {
+      clearInterval(notificationRequest);
+    }
+
+    notificationRequest = setInterval(function() {
+      fetch(url,{
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json; charset=utf-8",
+          "X-WP-Nonce": event.data["nonce"],
+        },
+        body: JSON.stringify(payload),
       })
-      .then((json) => {
-        
-        for (let i = 0; i < json.length; i++) {
-          let notification_date = new Date(json[i].date_notified);
-          if (notification_date < last_checked) {
-            setTimeout(function() { 
+        .then((response) => {
+          return response.json();
+        })
+        .then((notifications) => {
+          
+          for (const [index, notification] of notifications.entries()) {
+            let notification_date = new Date(notifications[index].date_notified);
+            if (notification_date > last_checked) {
 
-              let notify_title;
-              let notify_body;
+              //Timeout function so that all notifications aren't sent at once
+              setTimeout(function() { 
+                let notify_title;
+                let notify_body;
 
-              // Extract post url from response data
-              let notify_url = json[i].notification_note;
-              let url_start = notify_url.indexOf("\"", notify_url.indexOf("href="))+1;
-              let url_end = notify_url.indexOf("\"", url_start);
-              notify_url = notify_url.substring(url_start, url_end);
-              
-              // Build notification based on response data
-              switch(json[i].notification_name) {
-                case 'created':
-                  notify_title = 'New Contact Created';
-                  notify_body = 'A new contact was created and assigned to you.';
-                  break;
-                case 'assigned_to':
-                  notify_title = 'New Contact Assigned';
-                  notify_body = 'You have been assigned a new contact.';
-                  break;
-                case 'assigned_to_other':
-                  notify_title = 'Contact Reassigned';
-                  notify_body = 'A contact has been reassigned.';
-                  break;
-                case 'share':
-                  notify_title = 'Contact Shared';
-                  notify_body = 'A contact has been shared with you.';
-                  break;
-                case 'mention':
-                  notify_title = 'New Mention';
-                  notify_body = 'You were mentioned on a contact.';
-                  break;
-                case 'comment':
-                  notify_title = 'New Comment';
-                  notify_body = 'A new comment was left on a contact.';
-                  break;
-                case 'subassigned':
-                  notify_title = 'New Contact Subassigned';
-                  notify_body = 'A new contact has been subassigned to you.';
-                  break;
-                case 'milestone':
-                  notify_title = 'New Milestone';
-                  notify_body = 'A new milestone was added to a contact.';
-                  break;
-                case 'requires_update':
-                  notify_title = 'Update Required';
-                  notify_body = 'A contact requires an update.';
-                  break;
-                case 'contact_info_update':
-                  notify_title = 'Contact Updated';
-                  notify_body = 'A contact\'s details were modified.';
-                  break;
-                case 'assignment_declined':
-                  notify_title = 'User Declined Assignment';
-                  notify_body = 'A user declined assignment on a contact.';
-                  break;
-                default:
-                  // code
-              }
-              
-              // get window thing from pwa.js for icon
-              self.registration.showNotification(notify_title, {
-                body: notify_body,
-                icon: `${event.data["template_dir"]}/dt-assets/images/dt-caret.png`, // dt-assets/images/dt-caret.png
-                actions: [
-                  { action: 'open_link', title: 'Click here to open the link' }
-                ],
-                data: { link: notify_url }
-              });
+                // Extract post url from response data
+                const regex = /href="(.*)"/gm;
+                const matches = notification.notification_note.match(regex);
+                if (matches.length) {
+                  notify_url = matches[0];
+                }
+                
+                // Build notification based on response data
+                switch(notification.notification_name) {
+                  case 'created':
+                    notify_title = event.data.translations.created_title;
+                    notify_body = event.data.translations.created_body;
+                    break;
+                  case 'assigned_to':
+                    notify_title = event.data.translations.assigned_to_title;
+                    notify_body = event.data.translations.assigned_to_body;
+                    break;
+                  case 'assigned_to_other':
+                    notify_title = event.data.translations.assigned_to_other_title;
+                    notify_body = event.data.translations.assigned_to_other_body;
+                    break;
+                  case 'share':
+                    notify_title = event.data.translations.share_title;
+                    notify_body = event.data.translations.share_body;
+                    break;
+                  case 'mention':
+                    notify_title = event.data.translations.mention_title;
+                    notify_body = event.data.translations.mention_body;
+                    break;
+                  case 'comment':
+                    notify_title = event.data.translations.comment_title;
+                    notify_body = event.data.translations.comment_body;
+                    break;
+                  case 'subassigned':
+                    notify_title = event.data.translations.subassigned_title;
+                    notify_body = event.data.translations.subassigned_body;
+                    break;
+                  case 'milestone':
+                    notify_title = event.data.translations.milestone_title;
+                    notify_body = event.data.translations.milestone_body;
+                    break;
+                  case 'requires_update':
+                    notify_title = event.data.translations.requires_update_title;
+                    notify_body = event.data.translations.requires_update_body;
+                    break;
+                  case 'contact_info_update':
+                    notify_title = event.data.translations.contact_info_update_title;
+                    notify_body = event.data.translations.contact_info_update_body;
+                    break;
+                  case 'assignment_declined':
+                    notify_title = event.data.translations.assignment_declined_title;
+                    notify_body = event.data.translations.assignment_declined_body;
+                    break;
+                  default:
+                    // code
+                }
+                
+                // get window thing from pwa.js for icon
+                self.registration.showNotification(notify_title, {
+                  body: notify_body,
+                  icon: `${event.data["template_dir"]}/dt-assets/images/dt-caret.png`, // dt-assets/images/dt-caret.png
+                  actions: [
+                    { action: 'open_link', title: 'Open' }
+                  ],
+                  data: {
+                    link: notify_url,
+                    id: notifications[index].id,
+                    nonce: event.data["nonce"]
+                  }
+                });
 
-            }, 1000 * i); 
-          } else {
-            break;
+              //Timeout set to 1000 milliseconds (1 second) between each notification, so they don't all show at once
+              }, 1000 * index); 
+            } else {
+              break;
+            }
           }
-        }
-        if (json.length > 0) {
-          last_checked = new Date(json[0].date_notified);
-        }
-        return json;
+          
+          if (notifications.length > 0) {
+            last_checked = new Date();
+          }
 
-      })
-      .catch((reason) => {
-        console.log("reason:");
-        console.log(reason);
-      });
-  }, 60000)); // Execute every 60000 milliseconds (60 seconds)
+          return notifications;
+        })
+        .catch((reason) => {
+          console.log("reason:");
+          console.log(reason);
+        });
+    }, 60000); // Execute every 60000 milliseconds (60 seconds)
 });

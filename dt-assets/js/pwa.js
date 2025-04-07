@@ -12,20 +12,19 @@ if ('serviceWorker' in navigator) {
       console.error(`Service worker registration failed: ${error}`);
     },
   );
+
+  navigator.serviceWorker.ready.then((registration) => {
+    registration.active.postMessage(
+      {
+        "nonce": window.wpApiShare.nonce,
+        "template_dir": window.wpApiShare.template_dir,
+        "translations": window.wpPwa.translations,
+      },
+    );
+  });
 } else {
   console.error('Service workers are not supported.');
 }
-
-
-navigator.serviceWorker.ready.then((registration) => {
-  registration.active.postMessage(
-    {
-      "nonce": window.wpApiShare.nonce,
-      "template_dir": window.wpApiShare.template_dir,
-    },
-  );
-});
-
 
 let deferredPrompt;
 window.addEventListener('beforeinstallprompt', (e) => {
