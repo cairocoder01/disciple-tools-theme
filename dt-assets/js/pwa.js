@@ -18,6 +18,7 @@ if ('serviceWorker' in navigator) {
       {
         "nonce": window.wpApiShare.nonce,
         "template_dir": window.wpApiShare.template_dir,
+        "root": window.wpApiShare.root,
         "translations": window.wpPwa.translations,
       },
     );

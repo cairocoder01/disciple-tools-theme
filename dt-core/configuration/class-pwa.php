@@ -186,6 +186,7 @@ class Disciple_Tools_PWA
                     'contact_info_update_body' => __( 'A contact\'s details were modified.', 'disciple_tools' ),
                     'assignment_declined_title' => __( 'User Declined Assignment' ),
                     'assignment_declined_body' => __( 'A user declined assignment on a contact.', 'disciple_tools' ),
+                    'action_title' => __( 'Open' ),
                 ],
             )
         );
