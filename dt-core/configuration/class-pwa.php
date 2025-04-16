@@ -16,7 +16,6 @@
  *
  */
 
-
 /**
  * Class Disciple_Tools_PWA
  */
@@ -65,6 +64,24 @@ class Disciple_Tools_PWA
             $this->print_manifest_json();
             return;
         }
+
+        if ( 'service-worker.js' === $uri ) {
+            $this->print_service_worker();
+            return;
+        }
+    }
+
+    /**
+     * Handle "/service-worker.js" request.
+     *
+     * @since 1.0.0
+     */
+    private function print_service_worker() {
+
+        header( 'Content-Type: application/javascript; charset=utf-8' );
+        echo file_get_contents( $_SERVER['DOCUMENT_ROOT'].'/wp-content/themes/disciple-tools-theme/dt-assets/js/service-worker.js' );
+        
+        exit;
     }
 
     /**
@@ -143,6 +160,36 @@ class Disciple_Tools_PWA
 
     public function scripts() {
         // to add a custom install prompt, include this js.
-        // dt_theme_enqueue_script( 'pwa', 'dt-assets/js/pwa.js' );
+        dt_theme_enqueue_script( 'pwa', 'dt-assets/js/pwa.js' );
+        wp_localize_script(
+            'pwa', 'wpPwa', array(
+                'translations' => [
+                    'created_title' => __( 'New Contact Created', 'disciple_tools' ),
+                    'created_body' => __( 'A new contact was created and assigned to you.', 'disciple_tools' ),
+                    'assigned_to_title' => __( 'New Contact Assigned', 'disciple_tools' ),
+                    'assigned_to_body' => _x( 'You have been assigned a new contact.', 'Empty list results. Keep {{query}} as is in english', 'disciple_tools' ),
+                    'assigned_to_other_title' => __( 'Contact Reassigned', 'disciple_tools' ),
+                    'assigned_to_other_body' => __( 'A contact has been reassigned.', 'disciple_tools' ),
+                    'share_title' => __( 'Contact Shared', 'disciple_tools' ),
+                    'share_body' => __( 'A contact has been shared with you.', 'disciple_tools' ),
+                    'mention_title' => __( 'New Mention', 'disciple_tools' ),
+                    'mention_body' => __( 'You were mentioned on a contact.', 'disciple_tools' ),
+                    'comment_title' => __( 'New Comment', 'disciple_tools' ),
+                    'comment_body' => __( 'A new comment was left on a contact.', 'disciple_tools' ),
+                    'subassigned_title' => __( 'New Contact Subassigned', 'disciple_tools' ),
+                    'subassigned_body' => __( 'A new contact has been subassigned to you.', 'disciple_tools' ),
+                    'milestone_title' => __( 'New Milestone', 'disciple_tools' ),
+                    'milestone_body' => __( 'A new milestone was added to a contact.', 'disciple_tools' ),
+                    'requires_update_title' => __( 'Update Required', 'disciple_tools' ),
+                    'requires_update_body' => __( 'A contact requires an update.', 'disciple_tools' ),
+                    'contact_info_update_title' => __( 'Contact Updated', 'disciple_tools' ),
+                    'contact_info_update_body' => __( 'A contact\'s details were modified.', 'disciple_tools' ),
+                    'assignment_declined_title' => __( 'User Declined Assignment' ),
+                    'assignment_declined_body' => __( 'A user declined assignment on a contact.', 'disciple_tools' ),
+                    'action_title' => __( 'Open' ),
+                ],
+            )
+        );
     }
+
 }
