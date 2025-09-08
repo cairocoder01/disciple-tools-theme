@@ -191,6 +191,97 @@ const MyPluginComponent = {
 4. System validates parameters and registers navigation item + route
 5. Plugin page becomes accessible via `/dt-admin/extensions/plugin-slug`
 
+## Slot System for Dashboard Extensibility
+
+The DT Admin Vue app includes a slot system that allows plugins to register components for specific areas of the interface, particularly dashboard tiles.
+
+### Dashboard Tiles
+
+The main dashboard (`/dt-admin`) includes an "admin-dashboard" slot where plugins can add informational tiles with quick actions and status displays.
+
+### Slot Registration API
+
+WordPress plugins can register components for named slots by calling:
+
+```javascript
+window.dtApp.registerSlot({
+  name: 'admin-dashboard',           // Slot name
+  component: MyDashboardTile,        // Vue component to render
+  id: 'my-plugin-dashboard-tile',   // Unique identifier (optional)
+  props: {}                         // Props to pass to component (optional)
+});
+```
+
+### Dashboard Tile Component Example
+
+```javascript
+const MyDashboardTile = {
+  template: `
+    <div class="my-plugin-tile">
+      <div class="tile-header">
+        <h3>My Plugin Status</h3>
+        <span class="tile-status active">Active</span>
+      </div>
+      <div class="tile-content">
+        <p>Quick overview of plugin status and metrics.</p>
+        <div class="tile-stats">
+          <div class="stat">
+            <span class="stat-label">Items:</span>
+            <span class="stat-value">{{ itemCount }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="tile-actions">
+        <button @click="openPlugin" class="tile-btn">Configure</button>
+      </div>
+    </div>
+  `,
+  inject: ['router'], // Inject router for navigation
+  data() {
+    return {
+      itemCount: 42
+    }
+  },
+  methods: {
+    openPlugin() {
+      // Navigate using injected router
+      if (this.router) {
+        this.router.push('/dt-admin/extensions/my-plugin');
+      }
+    }
+  }
+};
+```
+
+### Slot Features
+
+- **Named Slots**: Components are registered to specific slot names (currently "admin-dashboard")
+- **Multiple Components**: Multiple plugins can register components for the same slot
+- **Automatic Rendering**: Registered components are automatically rendered in the appropriate UI areas
+- **Props Support**: Custom props can be passed to registered components
+- **Unique IDs**: Components can have unique identifiers to prevent duplicates
+- **Error Handling**: Comprehensive validation and error logging for slot registration
+- **Router Access**: Components can inject the Vue Router for navigation using `inject: ['router']`
+
+### Dashboard Tile Styling
+
+The system includes built-in CSS classes for dashboard tiles:
+
+- `.dashboard-tile`: Main tile container with hover effects
+- `.tile-header`: Header section with title and status
+- `.tile-content`: Main content area
+- `.tile-stats`: Statistics display area
+- `.tile-actions`: Action buttons section
+- `.tile-btn`: Styled buttons for tile actions
+
+### Slot Integration Workflow
+
+1. Plugin enqueues JavaScript file after DT Admin Vue app loads
+2. Plugin defines Vue component for tile interface
+3. Plugin calls `window.dtApp.registerSlot()` with slot configuration
+4. System validates parameters and adds component to slot registry
+5. Component is automatically rendered on the dashboard when slot is displayed
+
 ## Future Enhancements
 - REST API endpoints for dynamic content
 - User preference storage

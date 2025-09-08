@@ -36,9 +36,20 @@ const Home = {
             <p>Welcome to the DiscipleTools Admin area.</p>
             <div class="dashboard-content">
                 <p>Use the navigation sidebar to access different administrative sections.</p>
+
+                <!-- Admin Dashboard Slot for Plugin Tiles -->
+                <div v-if="slots['admin-dashboard'] && slots['admin-dashboard'].length > 0" class="admin-dashboard-tiles">
+                    <h2>Dashboard Tiles</h2>
+                    <div class="tiles-grid">
+                        <div v-for="tileComponent in slots['admin-dashboard']" :key="tileComponent.id" class="dashboard-tile">
+                            <component :is="tileComponent.component" v-bind="tileComponent.props"></component>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     `,
+  inject: ['slots'],
 };
 
 const Mapping = {
@@ -193,6 +204,7 @@ const App = {
   data() {
     return {
       dtAdminData: window.dtAdminData || {},
+      slots: {}, // Object to store registered slot components
       navigationItems: [
         {
           name: 'Dashboard',
@@ -239,6 +251,8 @@ const App = {
   provide() {
     return {
       navigationItems: this.navigationItems,
+      slots: this.slots,
+      router: this.$router,
     };
   },
   mounted() {
@@ -305,6 +319,46 @@ const App = {
 
       console.log(
         `DT Admin Plugin registered: ${pluginConfig.name} at ${pluginPath}`,
+      );
+      return true;
+    },
+    registerSlot(slotConfig) {
+      // Validate required parameters
+      if (!slotConfig || !slotConfig.name || !slotConfig.component) {
+        console.error(
+          'DT Admin Slot Registration Error: Missing required parameters (name, component)',
+        );
+        return false;
+      }
+
+      // Initialize slot array if it doesn't exist
+      if (!this.slots[slotConfig.name]) {
+        this.slots[slotConfig.name] = [];
+      }
+
+      // Check if component already registered for this slot
+      const existingComponent = this.slots[slotConfig.name].find(
+        (comp) => comp.id === slotConfig.id || comp.name === slotConfig.name,
+      );
+      if (existingComponent) {
+        console.warn(
+          `DT Admin Slot Registration Warning: Component already registered for slot ${slotConfig.name}`,
+        );
+        return false;
+      }
+
+      // Add component to slot
+      this.slots[slotConfig.name].push({
+        id:
+          slotConfig.id ||
+          `component-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        name: slotConfig.name,
+        component: slotConfig.component,
+        props: slotConfig.props || {},
+      });
+
+      console.log(
+        `DT Admin Slot component registered: ${slotConfig.name || 'unnamed'} in slot ${slotConfig.name}`,
       );
       return true;
     },
@@ -464,6 +518,43 @@ const App = {
                         margin-bottom: 20px;
                     }
 
+                    /* Dashboard Tiles */
+                    .admin-dashboard-tiles {
+                        margin-top: 30px;
+                        padding: 20px;
+                        background: #f8f9fa;
+                        border-radius: 8px;
+                    }
+
+                    .admin-dashboard-tiles h2 {
+                        margin: 0 0 20px 0;
+                        color: #495057;
+                        font-size: 1.3em;
+                        font-weight: 600;
+                        border-bottom: 1px solid #dee2e6;
+                        padding-bottom: 10px;
+                    }
+
+                    .tiles-grid {
+                        display: grid;
+                        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                        gap: 20px;
+                        margin-top: 15px;
+                    }
+
+                    .dashboard-tile {
+                        background: #ffffff;
+                        border: 1px solid #dee2e6;
+                        border-radius: 8px;
+                        padding: 20px;
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                        transition: box-shadow 0.2s ease;
+                    }
+
+                    .dashboard-tile:hover {
+                        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+                    }
+
                     /* Loading state */
                     .dt-admin-loading {
                         display: none;
@@ -509,10 +600,11 @@ document.addEventListener('DOMContentLoaded', function () {
   // Mount the app and store instance in window object
   const mountedApp = dtApp.mount('#dt-admin-app');
 
-  // Expose the registerPlugin method on the window object for plugin access
+  // Expose the registerPlugin and registerSlot methods on the window object for plugin access
   window.dtApp = {
     ...mountedApp,
     registerPlugin: mountedApp.registerPlugin.bind(mountedApp),
+    registerSlot: mountedApp.registerSlot.bind(mountedApp),
   };
 
   console.log('DT Admin Vue.js application initialized');

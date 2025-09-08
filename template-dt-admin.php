@@ -12,10 +12,14 @@ if ( ! current_user_can( 'manage_options' ) && ! current_user_can( 'access_disci
     exit();
 }
 
-// Enqueue the Vue.js application script
-add_action( 'wp_enqueue_scripts', 'dt_admin_enqueue_scripts' );
-
+// Enqueue the Vue.js application script only on dt-admin pages
 function dt_admin_enqueue_scripts() {
+    // Only enqueue scripts if we're actually on a dt-admin page
+    $url_path = dt_get_url_path();
+    if ( strpos( $url_path, 'dt-admin' ) !== 0 ) {
+        return;
+    }
+
     // Enqueue Vue.js from CDN
     wp_enqueue_script(
         'vuejs',
@@ -44,7 +48,6 @@ function dt_admin_enqueue_scripts() {
     );
 
     // Pass current URL path to the Vue app for routing
-    $url_path = dt_get_url_path();
     wp_localize_script( 'dt-admin-vue-app', 'dtAdminData', array(
         'current_path' => $url_path,
         'base_url' => home_url( '/dt-admin' ),
@@ -53,6 +56,8 @@ function dt_admin_enqueue_scripts() {
         'current_user_id' => get_current_user_id(),
     ));
 }
+
+add_action( 'wp_enqueue_scripts', 'dt_admin_enqueue_scripts' );
 
 ?>
 
