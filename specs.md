@@ -142,6 +142,55 @@ The implementation allows for easy extension:
 - Direct URL access supported for all routes
 - Bookmark-friendly URLs
 
+## Plugin Registration System
+
+The DT Admin Vue app now supports dynamic plugin registration, allowing WordPress plugins to add their own admin pages under the Extensions section.
+
+### Plugin Registration API
+
+WordPress plugins can register new admin pages by enqueuing a script that calls:
+
+```javascript
+window.dtApp.registerPlugin({
+  name: 'My Plugin Name',        // Display name in navigation
+  path: 'my-plugin-slug',        // URL slug (will be prefixed with /dt-admin/extensions/)
+  component: MyPluginComponent   // Vue component to render
+});
+```
+
+### Plugin Component Example
+
+```javascript
+const MyPluginComponent = {
+  template: `
+    <div class="my-plugin-admin">
+      <h1>My Plugin Admin</h1>
+      <p>Plugin administration interface goes here.</p>
+    </div>
+  `,
+  mounted() {
+    console.log('My Plugin component mounted');
+  }
+};
+```
+
+### Registration Features
+
+- **Automatic Path Prefixing**: Plugin paths are automatically prefixed with `/dt-admin/extensions/`
+- **Navigation Integration**: Plugin items are added under the Extensions section in the sidebar
+- **Route Registration**: Vue Router routes are dynamically registered for each plugin
+- **Duplicate Prevention**: System prevents registration of plugins with duplicate paths
+- **Error Handling**: Comprehensive validation and error logging
+- **Console Feedback**: Success and error messages logged to browser console
+
+### Plugin Integration Workflow
+
+1. Plugin enqueues JavaScript file after DT Admin Vue app loads
+2. Plugin defines Vue component for its admin interface
+3. Plugin calls `window.dtApp.registerPlugin()` with configuration
+4. System validates parameters and registers navigation item + route
+5. Plugin page becomes accessible via `/dt-admin/extensions/plugin-slug`
+
 ## Future Enhancements
 - REST API endpoints for dynamic content
 - User preference storage
@@ -149,8 +198,11 @@ The implementation allows for easy extension:
 - Mobile responsive design improvements
 - Advanced Vue.js components with composition API
 - State management with Pinia or Vuex
+- Plugin permission management
+- Plugin configuration storage
 
 ---
 
 *Created: September 8, 2025*
-*Implementation completed for DiscipleTools theme dt-admin section*
+*Updated: September 8, 2025*
+*Implementation completed for DiscipleTools theme dt-admin section with plugin extensibility*

@@ -1,6 +1,28 @@
 /**
  * DT Admin Vue.js Application
  * Single Page Application for /dt-admin section using Vue.js 3 and Vue Router 4
+ *
+ * Plugin Registration API:
+ * WordPress plugins can register new admin pages by enqueuing a script that calls:
+ *
+ * window.dtApp.registerPlugin({
+ *   name: 'My Plugin Name',
+ *   path: 'my-plugin-slug',  // Will be prefixed with /dt-admin/extensions/
+ *   component: MyPluginComponent
+ * });
+ *
+ * Example Plugin Component:
+ * const MyPluginComponent = {
+ *   template: `
+ *     <div class="my-plugin-admin">
+ *       <h1>My Plugin Admin</h1>
+ *       <p>Plugin administration interface goes here.</p>
+ *     </div>
+ *   `,
+ *   mounted() {
+ *     console.log('My Plugin component mounted');
+ *   }
+ * };
  */
 
 const { createApp } = Vue;
@@ -195,10 +217,10 @@ const App = {
           name: 'Extensions',
           path: '/dt-admin/extensions',
           children: [
-            {
-              name: 'Demo Content',
-              path: '/dt-admin/extensions/demo-content',
-            },
+            // {
+            //   name: 'Demo Content',
+            //   path: '/dt-admin/extensions/demo-content',
+            // },
           ],
         },
         {
@@ -224,6 +246,68 @@ const App = {
     console.log('DT Admin Vue App mounted successfully');
   },
   methods: {
+    registerPlugin(pluginConfig) {
+      // Validate required parameters
+      if (
+        !pluginConfig ||
+        !pluginConfig.name ||
+        !pluginConfig.path ||
+        !pluginConfig.component
+      ) {
+        console.error(
+          'DT Admin Plugin Registration Error: Missing required parameters (name, path, component)',
+        );
+        return false;
+      }
+
+      // Ensure path starts with /dt-admin/extensions/
+      const basePath = '/dt-admin/extensions/';
+      let pluginPath = pluginConfig.path;
+      if (!pluginPath.startsWith(basePath)) {
+        pluginPath = basePath + pluginPath.replace(/^\/+/, '');
+      }
+
+      // Find the Extensions navigation item
+      const extensionsItem = this.navigationItems.find(
+        (item) => item.name === 'Extensions',
+      );
+      if (!extensionsItem) {
+        console.error(
+          'DT Admin Plugin Registration Error: Extensions navigation item not found',
+        );
+        return false;
+      }
+
+      // Check if plugin already registered
+      const existingPlugin = extensionsItem.children.find(
+        (child) => child.path === pluginPath,
+      );
+      if (existingPlugin) {
+        console.warn(
+          `DT Admin Plugin Registration Warning: Plugin with path ${pluginPath} already registered`,
+        );
+        return false;
+      }
+
+      // Add navigation item to Extensions
+      extensionsItem.children.push({
+        name: pluginConfig.name,
+        path: pluginPath,
+        plugin: true,
+      });
+
+      // Register the route dynamically
+      this.$router.addRoute({
+        path: pluginPath,
+        component: pluginConfig.component,
+        name: pluginConfig.name.replace(/\s+/g, '_').toLowerCase(),
+      });
+
+      console.log(
+        `DT Admin Plugin registered: ${pluginConfig.name} at ${pluginPath}`,
+      );
+      return true;
+    },
     addStyles() {
       const styles = `
                 <style id="dt-admin-styles">
@@ -423,7 +507,16 @@ document.addEventListener('DOMContentLoaded', function () {
   dtApp.use(router);
 
   // Mount the app and store instance in window object
-  window.dtApp = dtApp.mount('#dt-admin-app');
+  const mountedApp = dtApp.mount('#dt-admin-app');
+
+  // Expose the registerPlugin method on the window object for plugin access
+  window.dtApp = {
+    ...mountedApp,
+    registerPlugin: mountedApp.registerPlugin.bind(mountedApp),
+  };
 
   console.log('DT Admin Vue.js application initialized');
+  console.log(
+    'Plugin registration available at: window.dtApp.registerPlugin(config)',
+  );
 });
