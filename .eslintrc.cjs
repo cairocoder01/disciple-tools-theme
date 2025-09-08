@@ -15,6 +15,8 @@ module.exports = {
   "globals": {
     "jQuery": false,
     "Toastify": false,
+    "Vue": false,
+    "VueRouter": false,
   },
   "rules": {
     "no-console": "off",

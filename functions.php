@@ -436,6 +436,16 @@ class Disciple_Tools
 
         $url_path = untrailingslashit( dt_get_url_path( true ) ); //allow get parameters
 
+        // Handle dt-admin routes with SPA support
+        if ( strpos( $url_path, 'dt-admin' ) === 0 && dt_please_log_in() ) {
+            $template_filename = locate_template( 'template-dt-admin.php', true );
+            if ( $template_filename ) {
+                exit(); // just exit if template was found and loaded
+            } else {
+                throw new Error( 'Expected to find template template-dt-admin.php' );
+            }
+        }
+
         if ( isset( $template_for_url[ $url_path ] ) && dt_please_log_in() ) {
             $template_filename = locate_template( $template_for_url[ $url_path ], true );
             if ( $template_filename ) {
