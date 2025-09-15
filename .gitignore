@@ -6,6 +6,7 @@ node_modules/
 .idea
 .DS_Store
 dt-people-groups/json/*
+dt-assets/dist
 composer.phar
 CodeSniffer.conf
 phpcbf.phar

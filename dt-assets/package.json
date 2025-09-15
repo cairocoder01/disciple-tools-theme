@@ -1,0 +1,19 @@
+{
+  "name": "dt-assets",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@kucrut/vite-for-wp": "^0.12.0",
+    "@vitejs/plugin-basic-ssl": "^2.1.0",
+    "@vitejs/plugin-vue": "^6.0.1",
+    "vite": "^7.1.5",
+    "vue": "^3.4.27",
+    "vue-router": "^4.5.1"
+  }
+}

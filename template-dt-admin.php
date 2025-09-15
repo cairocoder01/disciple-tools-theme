@@ -12,6 +12,14 @@ if ( ! current_user_can( 'manage_options' ) && ! current_user_can( 'access_disci
     exit();
 }
 
+require_once get_template_directory() . '/vendor/autoload.php';
+use Kucrut\Vite;
+
+// Initialize Vite for WP
+add_action('init', function() {
+    Vite\init( get_template_directory_uri() . '/dt-assets/build/vue' );
+});
+
 // Enqueue the Vue.js application script only on dt-admin pages
 function dt_admin_enqueue_scripts() {
     // Only enqueue scripts if we're actually on a dt-admin page
@@ -20,31 +28,10 @@ function dt_admin_enqueue_scripts() {
         return;
     }
 
-    // Enqueue Vue.js from CDN
-    wp_enqueue_script(
-        'vuejs',
-        'https://unpkg.com/vue@3/dist/vue.global.js',
-        array(),
-        '3.3.4',
-        true
-    );
-
-    // Enqueue Vue Router from CDN
-    wp_enqueue_script(
-        'vue-router',
-        'https://unpkg.com/vue-router@4/dist/vue-router.global.js',
-        array( 'vuejs' ),
-        '4.2.4',
-        true
-    );
-
-    // Enqueue our Vue application
-    wp_enqueue_script(
-        'dt-admin-vue-app',
-        get_template_directory_uri() . '/dt-assets/js/app.vue.js',
-        array( 'vuejs', 'vue-router' ),
-        filemtime( get_template_directory() . '/dt-assets/js/app.vue.js' ),
-        true
+    Vite\enqueue_asset(
+        get_template_directory() . '/dt-assets/dist',
+        'src/main.js',
+        [ 'handle' => 'dt-admin-vue-app' ]
     );
 
     // Pass current URL path to the Vue app for routing
@@ -64,18 +51,12 @@ add_action( 'wp_enqueue_scripts', 'dt_admin_enqueue_scripts' );
 <?php get_header(); ?>
 
 <div id="content" class="template-dt-admin">
-    <div id="inner-content" class="grid-x grid-margin-x">
-        <div class="large-12 medium-12 small-12 cell">
-
-            <!-- Vue.js Application Container -->
-            <div id="dt-admin-app">
-                <!-- Loading state while Vue app initializes -->
-                <div class="dt-admin-loading" style="text-align: center; padding: 50px;">
-                    <h1><?php esc_html_e( 'Hello World', 'disciple_tools' ); ?></h1>
-                    <p><?php esc_html_e( 'Loading DT Admin...', 'disciple_tools' ); ?></p>
-                </div>
-            </div>
-
+    <!-- Vue.js Application Container -->
+    <div id="dt-admin-app">
+        <!-- Loading state while Vue app initializes -->
+        <div class="dt-admin-loading" style="text-align: center; padding: 50px;">
+            <h1><?php esc_html_e( 'Hello World', 'disciple_tools' ); ?></h1>
+            <p><?php esc_html_e( 'Loading DT Admin...', 'disciple_tools' ); ?></p>
         </div>
     </div>
 </div>
