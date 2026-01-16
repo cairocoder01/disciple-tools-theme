@@ -249,6 +249,11 @@ class Disciple_Tools
         }
 
         /**
+         * dt-dashboard
+         */
+        require_once( 'dt-dashboard/dashboard.php' );
+
+        /**
          * dt-metrics
          */
         require_once( 'dt-metrics/counter.php' );
