@@ -7,8 +7,6 @@
 jQuery(document).ready(function ($) {
   'use strict';
 
-  console.log('Home Screen Admin JavaScript loaded');
-
   // Initialize admin functionality
   initializeAdmin();
 
@@ -16,8 +14,6 @@ jQuery(document).ready(function ($) {
    * Initialize admin functionality
    */
   function initializeAdmin() {
-    console.log('Initializing home screen admin...');
-
     // Apply theme-aware icon colors
     applyAdminIconColors();
 
@@ -28,16 +24,8 @@ jQuery(document).ready(function ($) {
     setupEventHandlers();
 
     // Refresh data on page load if we detect a successful operation
-    // Check for success notices in the DOM - this must complete before allowing interactions
     if ($('.notice.notice-success').length > 0) {
-      console.log('Success notice detected, refreshing data...');
-      refreshHomeAdminData()
-        .then(function () {
-          console.log('Data refresh completed successfully');
-        })
-        .fail(function () {
-          console.error('Data refresh failed, but continuing...');
-        });
+      refreshHomeAdminData();
     }
   }
 
@@ -79,18 +67,15 @@ jQuery(document).ready(function ($) {
       !dtHomeAdmin.ajax_url ||
       !dtHomeAdmin.nonce
     ) {
-      console.error('dtHomeAdmin data not available for refresh');
       return $.Deferred().reject('dtHomeAdmin not available').promise();
     }
 
     // If a refresh is already in progress, return the existing promise
     if (refreshInProgress && refreshPromise) {
-      console.log('Refresh already in progress, returning existing promise');
       return refreshPromise;
     }
 
     refreshInProgress = true;
-    console.log('Starting data refresh...');
 
     refreshPromise = $.ajax({
       url: dtHomeAdmin.ajax_url,
@@ -106,19 +91,9 @@ jQuery(document).ready(function ($) {
           // Update the global dtHomeAdmin object with fresh data
           if (response.data.apps) {
             dtHomeAdmin.apps = response.data.apps;
-            console.log(
-              'Apps data refreshed:',
-              dtHomeAdmin.apps.length,
-              'apps',
-            );
           }
           if (response.data.videos) {
             dtHomeAdmin.videos = response.data.videos;
-            console.log(
-              'Videos data refreshed:',
-              dtHomeAdmin.videos.length,
-              'videos',
-            );
           }
 
           // Reapply icon colors after data refresh
@@ -128,10 +103,6 @@ jQuery(document).ready(function ($) {
 
           return response;
         } else {
-          console.error(
-            'Failed to refresh data:',
-            response.data?.message || 'Unknown error',
-          );
           refreshInProgress = false;
           return $.Deferred()
             .reject(response.data?.message || 'Unknown error')
@@ -140,7 +111,6 @@ jQuery(document).ready(function ($) {
       })
       .fail(function (xhr, status, error) {
         refreshInProgress = false;
-        console.error('Error refreshing data:', error);
         return $.Deferred().reject(error).promise();
       });
 
@@ -168,12 +138,75 @@ jQuery(document).ready(function ($) {
   }
 
   /**
+   * Get description text for app type
+   * @param {string} type - Either 'app' or 'link'
+   * @returns {string} Description text for the app type
+   */
+  function getAppTypeDescription(type) {
+    if (type === 'app') {
+      return 'Apps will open in the current tab and will keep the Home Screen navigation bar.';
+    } else {
+      return 'Open the app in a new browser tab. Use this for external websites or resources.';
+    }
+  }
+
+  /**
+   * Update app type description based on selected type
+   * @param {string} type - Either 'app' or 'link'
+   * @param {string} targetId - ID of the description element to update
+   */
+  function updateAppTypeDescription(type, targetId) {
+    const $description = $('#' + targetId);
+    if ($description.length > 0) {
+      $description.text(getAppTypeDescription(type));
+    }
+  }
+
+  /**
+   * Get app type from checkbox state
+   * @param {boolean} isChecked - Whether checkbox is checked
+   * @returns {string} Either 'link' (if checked) or 'app' (if unchecked)
+   */
+  function getTypeFromCheckbox(isChecked) {
+    return isChecked ? 'link' : 'app';
+  }
+
+  /**
+   * Get checkbox state from app type
+   * @param {string} type - Either 'app' or 'link'
+   * @returns {boolean} True if type is 'link', false if type is 'app'
+   */
+  function getCheckboxFromType(type) {
+    return type === 'link';
+  }
+
+  /**
    * Set up event handlers
    */
   function setupEventHandlers() {
     // Handle icon input changes for live preview
     $(document).on('input', 'input[name="app_icon"]', function () {
       updateIconPreview($(this));
+    });
+
+    // Handle app type checkbox change in add form
+    $(document).on('change', '#app_type_link', function () {
+      const isChecked = $(this).is(':checked');
+      const appType = getTypeFromCheckbox(isChecked);
+      // Update hidden field value
+      $('#app_type').val(appType);
+      // Update description
+      updateAppTypeDescription(appType, 'app-type-description-add');
+    });
+
+    // Handle app type checkbox change in edit modal (using delegated handler)
+    $(document).on('change', '#app-edit-type-link', function () {
+      const isChecked = $(this).is(':checked');
+      const appType = getTypeFromCheckbox(isChecked);
+      // Update hidden field value
+      $('#app-edit-type').val(appType);
+      // Update description
+      updateAppTypeDescription(appType, 'app-type-description-edit');
     });
 
     // Handle color reset button for add form
@@ -186,7 +219,6 @@ jQuery(document).ready(function ($) {
 
       // Check if elements exist
       if ($colorInput.length === 0) {
-        console.error('Add form color input not found');
         return;
       }
 
@@ -215,8 +247,6 @@ jQuery(document).ready(function ($) {
           'Using default theme-aware color. The icon will automatically switch between black (light mode) and white (dark mode). Set a custom color to override.',
         );
       }
-
-      console.log('Add form color reset to default (#cccccc)');
     });
 
     // Handle color input changes in add form to update description
@@ -251,7 +281,6 @@ jQuery(document).ready(function ($) {
         const iconInput = $("input[name='" + $(this).data('icon-input') + "']");
 
         if (iconInput.length === 0) {
-          console.error('Icon input not found');
           return;
         }
 
@@ -268,8 +297,6 @@ jQuery(document).ready(function ($) {
               }
             },
           );
-        } else {
-          console.error('display_icon_selector_dialog function not found');
         }
       },
     );
@@ -279,12 +306,9 @@ jQuery(document).ready(function ($) {
      * This ensures all form fields are properly included in the POST data
      */
     function saveSettingsForm() {
-      console.log('saveSettingsForm called');
-
       const $form = $('#dt-home-settings-form');
 
       if ($form.length === 0) {
-        console.error('Settings form not found');
         alert('Error: Form not found. Please refresh the page.');
         return false;
       }
@@ -300,24 +324,8 @@ jQuery(document).ready(function ($) {
       // Extract values from general settings fields (they may be outside the form)
       const titleValue = $('#home_screen_title').val() || '';
       const descriptionValue = $('#home_screen_description').val() || '';
-      const enableRolesPermissions = $('#enable_roles_permissions').is(
-        ':checked',
-      );
       const inviteOthers = $('#invite_others').is(':checked');
       const requireLogin = $('#require_login').is(':checked');
-
-      console.log('Form validation passed, submitting form');
-      console.log('Extracted form data:', {
-        title: titleValue,
-        description: descriptionValue,
-        enable_roles_permissions: enableRolesPermissions,
-        invite_others: inviteOthers,
-        require_login: requireLogin,
-        dt_home_screen_settings: $form
-          .find('input[name="dt_home_screen_settings"]')
-          .val(),
-        nonce: $form.find('input[name="dt_home_screen_nonce"]').val(),
-      });
 
       // Create or update hidden fields in the form with the extracted values
       // This ensures they're included in the POST request
@@ -346,19 +354,6 @@ jQuery(document).ready(function ($) {
       }
       $descriptionField.val(descriptionValue);
 
-      // Handle enable_roles_permissions (checkbox)
-      // Remove any existing hidden field first
-      $form.find('input[name="enable_roles_permissions"]').remove();
-      // Only add the field if checkbox is checked (standard HTML form behavior)
-      if (enableRolesPermissions) {
-        const $checkboxField = $('<input>').attr({
-          type: 'hidden',
-          name: 'enable_roles_permissions',
-          value: '1',
-        });
-        $form.append($checkboxField);
-      }
-
       // Handle invite_others (checkbox)
       // Remove any existing hidden fields first (both the one we added and any existing ones)
       $form.find('input[name="invite_others"]').remove();
@@ -381,16 +376,6 @@ jQuery(document).ready(function ($) {
       });
       $form.append($requireLoginField);
 
-      console.log('Added hidden fields to form. Form now contains:', {
-        title: $form.find('input[name="home_screen_title"]').length,
-        description: $form.find('input[name="home_screen_description"]').length,
-        enable_roles_permissions: $form.find(
-          'input[name="enable_roles_permissions"]',
-        ).length,
-        invite_others: $form.find('input[name="invite_others"]').length,
-        require_login: $form.find('input[name="require_login"]').length,
-      });
-
       // Show loading state on submit button
       $('#save-settings-top').each(function () {
         const $btn = $(this);
@@ -405,21 +390,14 @@ jQuery(document).ready(function ($) {
       }
 
       // Use native DOM submit to ensure all form fields are included in POST
-      // This bypasses jQuery handlers and directly submits the form
       const formElement = $form[0];
       if (formElement) {
-        console.log('Submitting form via native DOM submit');
         try {
-          // Call native submit method which will include all form fields
           formElement.submit();
         } catch (error) {
-          console.error('Error submitting form:', error);
-          // Fallback to jQuery submit
-          console.log('Falling back to jQuery submit');
           $form.submit();
         }
       } else {
-        console.error('Form element not found');
         alert('Error: Could not submit form. Please refresh the page.');
         return false;
       }
@@ -431,7 +409,6 @@ jQuery(document).ready(function ($) {
     $(document).on('click', '#save-settings-top', function (e) {
       e.preventDefault();
       e.stopPropagation();
-      console.log('Save Settings button clicked');
       saveSettingsForm();
       return false;
     });
@@ -440,7 +417,6 @@ jQuery(document).ready(function ($) {
     $(document).on('click', '.edit-app', function (e) {
       e.preventDefault();
       const appId = $(this).data('app-id');
-      console.log('Edit app clicked:', appId);
       showEditAppForm(appId);
     });
 
@@ -448,7 +424,6 @@ jQuery(document).ready(function ($) {
     $(document).on('click', '.edit-video', function (e) {
       e.preventDefault();
       const videoId = $(this).data('video-id');
-      console.log('Edit video clicked:', videoId);
       showEditVideoForm(videoId);
     });
 
@@ -480,12 +455,6 @@ jQuery(document).ready(function ($) {
     $(document).on('click', '.cancel-edit-modal', function (e) {
       e.preventDefault();
       closeEditModal();
-    });
-
-    // Handle cancel edit buttons (for inline forms - legacy support)
-    $(document).on('click', '.cancel-edit', function (e) {
-      e.preventDefault();
-      hideEditForms();
     });
 
     // Handle add new app button
@@ -538,7 +507,6 @@ jQuery(document).ready(function ($) {
 
     // Check if dtHomeAdmin is available
     if (typeof dtHomeAdmin === 'undefined' || !dtHomeAdmin.apps) {
-      console.error('dtHomeAdmin.apps is not available');
       alert('Unable to load app data. Please refresh the page.');
       return;
     }
@@ -550,7 +518,6 @@ jQuery(document).ready(function ($) {
 
       if (!appData) {
         // App not found - refresh data and try again
-        console.log('App not found in current data, refreshing...');
         refreshHomeAdminData()
           .then(function () {
             // Try again after refresh
@@ -558,16 +525,13 @@ jQuery(document).ready(function ($) {
               (app) => app.id === appId,
             );
             if (refreshedAppData) {
-              console.log('App found after refresh');
               populateEditModal(refreshedAppData);
               openEditModal();
             } else {
-              console.error('App not found after refresh:', appId);
               alert('App not found. Please refresh the page.');
             }
           })
           .fail(function () {
-            console.error('Failed to refresh data');
             alert('Unable to refresh app data. Please refresh the page.');
           });
         return;
@@ -579,34 +543,23 @@ jQuery(document).ready(function ($) {
     }
 
     // Always ensure we have fresh data before opening the modal
-    // This prevents showing stale data after a save operation
     function ensureFreshDataAndOpen() {
       if (refreshInProgress && refreshPromise) {
         // Refresh is already in progress, wait for it
-        console.log('Refresh in progress, waiting for completion...');
         refreshPromise
           .then(function () {
-            console.log('Refresh completed, opening modal...');
             findAndOpenApp();
           })
           .fail(function () {
-            console.warn('Refresh failed, but proceeding with current data...');
-            // Even if refresh fails, try to find the app with current data
             findAndOpenApp();
           });
       } else {
         // No refresh in progress, trigger one to ensure fresh data
-        console.log(
-          'No refresh in progress, triggering refresh to ensure fresh data...',
-        );
         refreshHomeAdminData()
           .then(function () {
-            console.log('Refresh completed, opening modal with fresh data...');
             findAndOpenApp();
           })
           .fail(function () {
-            console.warn('Refresh failed, but proceeding with current data...');
-            // Even if refresh fails, try to find the app with current data
             findAndOpenApp();
           });
       }
@@ -625,7 +578,6 @@ jQuery(document).ready(function ($) {
 
     // Check if dtHomeAdmin is available
     if (typeof dtHomeAdmin === 'undefined' || !dtHomeAdmin.videos) {
-      console.error('dtHomeAdmin.videos is not available');
       alert('Unable to load video data. Please refresh the page.');
       return;
     }
@@ -639,7 +591,6 @@ jQuery(document).ready(function ($) {
 
       if (!videoData) {
         // Video not found - refresh data and try again
-        console.log('Video not found in current data, refreshing...');
         refreshHomeAdminData()
           .then(function () {
             // Try again after refresh
@@ -647,16 +598,13 @@ jQuery(document).ready(function ($) {
               (video) => video.id === videoId,
             );
             if (refreshedVideoData) {
-              console.log('Video found after refresh');
               populateEditVideoModal(refreshedVideoData);
               openEditVideoModal();
             } else {
-              console.error('Video not found after refresh:', videoId);
               alert('Video not found. Please refresh the page.');
             }
           })
           .fail(function () {
-            console.error('Failed to refresh data');
             alert('Unable to refresh video data. Please refresh the page.');
           });
         return;
@@ -669,13 +617,11 @@ jQuery(document).ready(function ($) {
 
     // If a refresh is in progress, wait for it to complete
     if (refreshInProgress && refreshPromise) {
-      console.log('Waiting for refresh to complete...');
       refreshPromise
         .then(function () {
           findAndOpenVideo();
         })
         .fail(function () {
-          // Even if refresh fails, try to find the video with current data
           findAndOpenVideo();
         });
     } else {
@@ -768,10 +714,14 @@ jQuery(document).ready(function ($) {
         <tr>
           <th scope="row" style="width: 150px;">Type</th>
           <td>
-            <select name="app_type" id="app-edit-type" required style="width: 100%; max-width: 100%; box-sizing: border-box;">
-              <option value="link" ${appType === 'link' ? 'selected' : ''}>Link</option>
-              <option value="app" ${appType === 'app' ? 'selected' : ''}>App</option>
-            </select>
+            <label>
+              <input type="checkbox" name="app_type_link" id="app-edit-type-link" ${getCheckboxFromType(appType) ? 'checked' : ''} />
+              Open as Link (opens in new tab)
+            </label>
+            <input type="hidden" name="app_type" id="app-edit-type" value="${appType}" />
+            <p class="description" id="app-type-description-edit" style="margin-top: 5px;">
+              ${getAppTypeDescription(appType)}
+            </p>
           </td>
         </tr>
         <tr>
@@ -966,7 +916,6 @@ jQuery(document).ready(function ($) {
 
       // Check if elements exist
       if ($colorInput.length === 0) {
-        console.error('Color input not found');
         return;
       }
 
@@ -995,8 +944,6 @@ jQuery(document).ready(function ($) {
           'Using default theme-aware color. The icon will automatically switch between black (light mode) and white (dark mode). Set a custom color to override.',
         );
       }
-
-      console.log('Color reset to default (#cccccc)');
     });
 
     // Handle color input changes to update description
@@ -1084,7 +1031,7 @@ jQuery(document).ready(function ($) {
                     );
                   }
                 } catch (err) {
-                  console.error('Error accessing dialog instance:', err);
+                  // Dialog instance not available
                 }
               }
 
@@ -1144,23 +1091,9 @@ jQuery(document).ready(function ($) {
                       'input, textarea, select',
                     );
 
-                    console.log(
-                      'Found form fields for reconstruction:',
-                      $allFields.length,
-                    );
-                    console.log(
-                      'Checkboxes found:',
-                      $allFields.filter(':checkbox').length,
-                    );
-                    console.log(
-                      'Checked checkboxes:',
-                      $allFields.filter(':checkbox:checked').length,
-                    );
-
                     $allFields.each(function () {
                       const $field = $(this);
                       const fieldName = $field.attr('name');
-                      const fieldType = $field.attr('type');
 
                       // Skip if field has no name (not a form field)
                       if (!fieldName) {
@@ -1175,21 +1108,10 @@ jQuery(document).ready(function ($) {
                         $clonedField.val(selectedValue);
                       }
 
-                      // For checkboxes, preserve checked state and ensure they're included
+                      // For checkboxes, preserve checked state
                       if ($field.is(':checkbox')) {
                         const isChecked = $field.is(':checked');
                         $clonedField.prop('checked', isChecked);
-                        // Ensure unchecked checkboxes are still included if they're part of an array (like app_roles[])
-                        // For array checkboxes, we need to include them even if unchecked, but only if they were checked
-                        // Actually, HTML form behavior: unchecked checkboxes don't submit, which is correct
-                        // But we need to ensure checked ones are included
-                        if (isChecked) {
-                          console.log(
-                            'Including checked checkbox:',
-                            fieldName,
-                            $field.val(),
-                          );
-                        }
                       }
 
                       // For radio buttons, preserve checked state
@@ -1206,58 +1128,20 @@ jQuery(document).ready(function ($) {
                       if ($field.is('input[type="color"]')) {
                         const currentValue = $field.val();
                         $clonedField.val(currentValue);
-                        // Also set the value attribute to ensure it's preserved
                         $clonedField.attr('value', currentValue);
-                        console.log(
-                          'Color input cloned with value:',
-                          fieldName,
-                          currentValue,
-                        );
                       }
 
                       $formElement.append($clonedField);
                     });
-
-                    console.log(
-                      'Form reconstructed with fields:',
-                      $formElement.find('input, textarea, select').length,
-                    );
-                    console.log(
-                      'Reconstructed checkboxes:',
-                      $formElement.find(':checkbox').length,
-                    );
-                    console.log(
-                      'Reconstructed checked checkboxes:',
-                      $formElement.find(':checkbox:checked').length,
-                    );
                   }
 
                   // Temporarily add form to body for submission (hidden)
                   $formElement.css('display', 'none').appendTo('body');
-
-                  console.log(
-                    'Form reconstructed. Field count:',
-                    $formElement.find('input, textarea, select').length,
-                  );
                 }
               }
 
               // Final check if form exists
               if (!$formElement || !$formElement.length) {
-                console.error(
-                  'Form not found. Dialog element:',
-                  $dialogElement.length,
-                );
-                console.error('Dialog element HTML:', $dialogElement.html());
-                console.error('All forms in document:', $('form').length);
-                console.error(
-                  'Forms with ID dt-app-edit-form:',
-                  $('#dt-app-edit-form').length,
-                );
-                console.error(
-                  'Forms with name dt-app-edit-form:',
-                  $('form[name="dt-app-edit-form"]').length,
-                );
                 alert('Error: Form not found. Please refresh the page.');
                 return false;
               }
@@ -1265,7 +1149,6 @@ jQuery(document).ready(function ($) {
               // Validate before submitting
               const $titleInput = $formElement.find('#app-edit-title');
               if ($titleInput.length === 0) {
-                console.error('Form fields not populated yet');
                 alert(
                   'Error: Form fields not loaded. Please close and try again.',
                 );
@@ -1288,46 +1171,12 @@ jQuery(document).ready(function ($) {
               // Submit the form using native DOM submit (this will cause a page reload)
               const formDomElement = $formElement[0];
 
-              // Debug: Log form data before submission
+              // Ensure color input value is properly set before submission
               if (formDomElement) {
-                const formData = new FormData(formDomElement);
-                const rolesData = [];
-                let submittedColor = '';
-                for (const [key, value] of formData.entries()) {
-                  if (key === 'app_roles[]') {
-                    rolesData.push(value);
-                  }
-                  if (key === 'app_color') {
-                    submittedColor = value;
-                  }
-                }
-                console.log(
-                  'Form submission - User roles type:',
-                  $formElement
-                    .find('input[name="app_user_roles_type"]:checked')
-                    .val(),
-                );
-                console.log('Form submission - Selected roles:', rolesData);
-                console.log('Form submission - Color value:', submittedColor);
-                console.log(
-                  'Form submission - Color input current value:',
-                  $formElement.find('#app-edit-color').val(),
-                );
-                console.log(
-                  'Form submission - Total form fields:',
-                  $formElement.find('input, textarea, select').length,
-                );
-
-                // Ensure color input value is properly set before submission
                 const $colorInput = $formElement.find('#app-edit-color');
                 if ($colorInput.length > 0) {
                   const currentColorValue = $colorInput.val();
-                  // Make sure the value attribute matches the current value
                   $colorInput.attr('value', currentColorValue);
-                  console.log(
-                    'Ensured color input value is set to:',
-                    currentColorValue,
-                  );
                 }
               }
 
@@ -1335,10 +1184,8 @@ jQuery(document).ready(function ($) {
                 formDomElement &&
                 typeof formDomElement.submit === 'function'
               ) {
-                // Use native submit which bypasses jQuery handlers
                 formDomElement.submit();
               } else {
-                // Fallback: trigger submit event
                 $formElement.trigger('submit');
               }
 
@@ -1356,12 +1203,6 @@ jQuery(document).ready(function ($) {
         open: function () {
           // Update icon preview when dialog opens
           updateIconPreview($('#app-edit-icon'));
-
-          // Verify form is accessible when dialog opens
-          const $formCheck = $('#dt-app-edit-form');
-          if ($formCheck.length === 0) {
-            console.warn('Form not found when dialog opens');
-          }
         },
         close: function () {
           // Clean up when closing
@@ -1372,17 +1213,6 @@ jQuery(document).ready(function ($) {
 
     // Open the dialog
     $dialog.dialog('open');
-
-    // After dialog is opened, verify form is accessible
-    // Use a small delay to ensure dialog is fully rendered
-    setTimeout(function () {
-      const $formCheck = $('#dt-app-edit-form');
-      if ($formCheck.length === 0) {
-        console.warn('Form not accessible after dialog opens');
-      } else {
-        console.log('Form found after dialog opens:', $formCheck.length);
-      }
-    }, 100);
   }
 
   /**
@@ -1399,33 +1229,6 @@ jQuery(document).ready(function ($) {
     return String(text || '').replace(/[&<>"']/g, function (m) {
       return map[m];
     });
-  }
-
-  /**
-   * Load roles for edit form
-   */
-  function loadRolesForEditForm(container, selectedRoles = []) {
-    // This would typically make an AJAX call to get roles
-    // For now, we'll use a simple approach with the roles from the page
-    const rolesContainer = container.find('.roles-checkboxes');
-
-    // Get roles from the add form (they should be available)
-    const addFormRoles = $('.add-app-form .roles-checkboxes').html();
-    if (addFormRoles) {
-      rolesContainer.html(addFormRoles);
-
-      // Enable all checkboxes in the edit form (they might be disabled from the add form)
-      rolesContainer.find('input[type="checkbox"]').prop('disabled', false);
-
-      // Check the appropriate roles
-      selectedRoles.forEach((role) => {
-        rolesContainer.find(`input[value="${role}"]`).prop('checked', true);
-      });
-    } else {
-      rolesContainer.html(
-        '<p><em>Unable to load roles. Please refresh the page.</em></p>',
-      );
-    }
   }
 
   /**
@@ -1535,7 +1338,7 @@ jQuery(document).ready(function ($) {
                     );
                   }
                 } catch (err) {
-                  console.error('Error accessing dialog instance:', err);
+                  // Dialog instance not available
                 }
               }
 
@@ -1614,10 +1417,6 @@ jQuery(document).ready(function ($) {
 
               // Final check if form exists
               if (!$formElement || !$formElement.length) {
-                console.error(
-                  'Video form not found. Dialog element:',
-                  $dialogElement.length,
-                );
                 alert('Error: Form not found. Please refresh the page.');
                 return false;
               }
@@ -1625,7 +1424,6 @@ jQuery(document).ready(function ($) {
               // Validate before submitting
               const $titleInput = $formElement.find('#video-edit-title');
               if ($titleInput.length === 0) {
-                console.error('Video form fields not populated yet');
                 alert(
                   'Error: Form fields not loaded. Please close and try again.',
                 );
@@ -1667,11 +1465,7 @@ jQuery(document).ready(function ($) {
           },
         ],
         open: function () {
-          // Verify form is accessible when dialog opens
-          const $formCheck = $('#dt-video-edit-form');
-          if ($formCheck.length === 0) {
-            console.warn('Video form not found when dialog opens');
-          }
+          // Dialog opened
         },
         close: function () {
           // Clean up when closing
@@ -1702,13 +1496,6 @@ jQuery(document).ready(function ($) {
     if ($dialog.hasClass('ui-dialog-content')) {
       $dialog.dialog('close');
     }
-  }
-
-  /**
-   * Hide edit forms (legacy function for inline forms)
-   */
-  function hideEditForms() {
-    $('.edit-form-row').remove();
   }
 
   /**
@@ -1756,7 +1543,6 @@ jQuery(document).ready(function ($) {
     init() {
       this.addDragHandles();
       this.bindEvents();
-      console.log('SortableTable: Initialization complete');
     }
 
     addDragHandles() {
@@ -1764,25 +1550,11 @@ jQuery(document).ready(function ($) {
 
       if (!tbody) return;
 
-      // Make rows draggable and ensure drag handles are properly configured
+      // Make rows draggable (cursor styles are in admin.css)
       const rows = tbody.querySelectorAll('tr');
 
-      rows.forEach((row, index) => {
-        // Make the entire row draggable
+      rows.forEach((row) => {
         row.draggable = true;
-        row.style.cursor = 'move';
-
-        // The drag handles are already in the HTML, just ensure they have proper styling
-        const dragHandle = row.querySelector('.drag-handle');
-        if (dragHandle) {
-          dragHandle.style.cursor = 'grab';
-          dragHandle.addEventListener('mousedown', () => {
-            dragHandle.style.cursor = 'grabbing';
-          });
-          dragHandle.addEventListener('mouseup', () => {
-            dragHandle.style.cursor = 'grab';
-          });
-        }
       });
     }
 
@@ -1992,21 +1764,11 @@ jQuery(document).ready(function ($) {
     }
 
     showMessage(text, type) {
-      // Create or update message element
+      // Create or update message element (static styles are in admin.css .sortable-message)
       let messageEl = document.querySelector('.sortable-message');
       if (!messageEl) {
         messageEl = document.createElement('div');
         messageEl.className = 'sortable-message';
-        messageEl.style.position = 'fixed';
-        messageEl.style.bottom = '20px';
-        messageEl.style.right = '20px';
-        messageEl.style.top = '';
-        messageEl.style.padding = '14px 28px';
-        messageEl.style.borderRadius = '6px';
-        messageEl.style.color = 'white';
-        messageEl.style.fontWeight = 'bold';
-        messageEl.style.fontSize = '1.25rem';
-        messageEl.style.zIndex = '9999';
         document.body.appendChild(messageEl);
       }
 

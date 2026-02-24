@@ -157,20 +157,6 @@ class DT_Home_Admin {
                             </tr>
                             <tr>
                                 <th scope="row">
-                                    <label for="enable_roles_permissions"><?php esc_html_e( 'Enable Role-Based Access', 'disciple_tools' ); ?></label>
-                                </th>
-                                <td>
-                                    <input type="checkbox"
-                                           id="enable_roles_permissions"
-                                           name="enable_roles_permissions"
-                                           value="1"
-                                           <?php checked( $settings['enable_roles_permissions'] ?? true ); ?> />
-                                    <label for="enable_roles_permissions"><?php esc_html_e( 'Enable role-based access control for apps', 'disciple_tools' ); ?></label>
-                                    <p class="description"><?php esc_html_e( 'When enabled, you can restrict app access to specific user roles.', 'disciple_tools' ); ?></p>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th scope="row">
                                     <label for="invite_others"><?php esc_html_e( 'Allow users to invite others', 'disciple_tools' ); ?></label>
                                 </th>
                                 <td>
@@ -205,9 +191,11 @@ class DT_Home_Admin {
                                             </strong>
                                             <br>
                                             <?php
+                                            $dt_general_settings_link = admin_url( 'admin.php?page=dt_options&tab=general#user-preferences' );
                                             printf(
-                                                esc_html__( 'To enable user registration, visit %s.', 'disciple_tools' ),
-                                                '<a href="' . esc_url( $settings_link ) . '">' . esc_html( $settings_text ) . '</a>'
+                                                esc_html__( 'To enable user registration, you must enable it in both WordPress settings (%1$s) and Disciple Tools settings (%2$s).', 'disciple_tools' ),
+                                                '<a href="' . esc_url( $settings_link ) . '">' . esc_html( $settings_text ) . '</a>',
+                                                '<a href="' . esc_url( $dt_general_settings_link ) . '">' . esc_html__( 'General Settings', 'disciple_tools' ) . '</a>'
                                             );
                                             ?>
                                         <?php endif; ?>
@@ -257,9 +245,11 @@ class DT_Home_Admin {
                                     $settings_link = admin_url( 'options-general.php' );
                                     $settings_text = __( 'General Settings', 'disciple_tools' );
                                 }
+                                $dt_general_settings_link = admin_url( 'admin.php?page=dt_options&tab=general#user-preferences' );
                                 printf(
-                                    esc_html__( 'To change registration settings, visit %s.', 'disciple_tools' ),
-                                    '<a href="' . esc_url( $settings_link ) . '">' . esc_html( $settings_text ) . '</a>'
+                                    esc_html__( 'To change registration settings, visit WordPress %1$s and Disciple Tools %2$s.', 'disciple_tools' ),
+                                    '<a href="' . esc_url( $settings_link ) . '">' . esc_html( $settings_text ) . '</a>',
+                                    '<a href="' . esc_url( $dt_general_settings_link ) . '">' . esc_html__( 'General Settings', 'disciple_tools' ) . '</a>'
                                 );
                                 ?>
                             </p>
@@ -644,7 +634,7 @@ class DT_Home_Admin {
         $settings = [
             'title' => sanitize_text_field( wp_unslash( $_POST['home_screen_title'] ?? '' ) ),
             'description' => sanitize_textarea_field( wp_unslash( $_POST['home_screen_description'] ?? '' ) ),
-            'enable_roles_permissions' => isset( $_POST['enable_roles_permissions'] ) ? 1 : 0,
+            'enable_roles_permissions' => 1, // Always enabled by default
         ];
 
         // Handle require_login (checkbox sends "1" when checked, "0" when unchecked via hidden field)
@@ -1042,10 +1032,14 @@ class DT_Home_Admin {
                     <tr>
                         <th scope="row"><?php esc_html_e( 'Type', 'disciple_tools' ); ?></th>
                         <td>
-                            <select name="app_type" id="app_type" required>
-                                <option value="link"><?php esc_html_e( 'Link', 'disciple_tools' ) ?></option>
-                                <option value="app"><?php esc_html_e( 'App', 'disciple_tools' ) ?></option>
-                            </select>
+                            <label>
+                                <input type="checkbox" name="app_type_link" id="app_type_link" checked />
+                                <?php esc_html_e( 'Open as Link (opens in new tab)', 'disciple_tools' ); ?>
+                            </label>
+                            <input type="hidden" name="app_type" id="app_type" value="link" />
+                            <p class="description" id="app-type-description-add">
+                                <?php esc_html_e( 'Open the app in a new browser tab. Use this for external websites or resources.', 'disciple_tools' ); ?>
+                            </p>
                         </td>
                     </tr>
                     <tr>
@@ -1177,8 +1171,8 @@ class DT_Home_Admin {
                                         $app_color = $has_custom_color ? $app['color'] : '#0a0a0a'; // Default to black (light mode default)
 
                                         if ( strpos( $app['icon'], 'mdi ' ) === 0 ) : ?>
-                                            <i class="<?php echo esc_attr( $app['icon'] ); ?> admin-app-icon" 
-                                               style="font-size: 20px; vertical-align: middle; color: <?php echo esc_attr( $app_color ); ?>;" 
+                                            <i class="<?php echo esc_attr( $app['icon'] ); ?> admin-app-icon"
+                                               style="font-size: 20px; vertical-align: middle; color: <?php echo esc_attr( $app_color ); ?>;"
                                                data-has-custom-color="<?php echo $has_custom_color ? 'true' : 'false'; ?>"
                                                data-custom-color="<?php echo $has_custom_color ? esc_attr( $app['color'] ) : ''; ?>"></i>
                                         <?php else : ?>
