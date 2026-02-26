@@ -25,7 +25,7 @@ All sections described below should match these mockups as closely as possible. 
 
 - **PHP:** Follow WordPress coding standards. Use `esc_html__( 'String', 'disciple_tools' )` for all user-facing strings (internationalization). Escape all output with `esc_html()`, `esc_attr()`, `esc_url()`, etc.
 - **SCSS:** Nest styles under `.template-dashboard` to scope them. Use existing CSS custom properties (e.g., `var(--alert-color)`, `var(--text-color-inverse)`) from the theme rather than hardcoded colors. Check `dt-assets/scss/` for available variables.
-- **JS:** Use `window.SHAREDFUNCTIONS` and `window.API` utilities already available in D.T for making REST API calls (e.g., `window.API.get_post()`, `jQuery.ajax()` with `window.wpApiShare.nonce`). Localize script data via `wp_localize_script()`.
+- **JS:** Use `window.SHAREDFUNCTIONS` and `window.API` utilities already available in D.T for making REST API calls (e.g., `window.API.get_post()`, `jQuery.ajax()` with `window.wpApiShare.nonce`). Localize script data via `wp_localize_script()`. Avoid usage of jQuery in favor of native browser APIs.
 - **REST API:** Register endpoints under the `dt/v1` namespace using `register_rest_route()`. Use `dt_has_permissions()` or capability checks for authorization.
 
 ---
@@ -61,24 +61,24 @@ All sections described below should match these mockups as closely as possible. 
 
 **Visual reference:** Top section of both mockups — orange background, large semi-transparent contact icon on left, "Pending Contacts" title, and white contact cards.
 
-- [ ] **2.1** Extend `#pending-contacts` styles in `_dashboard.scss`:
+- [x] **2.1** Extend `#pending-contacts` styles in `_dashboard.scss`:
     - Add `.contacts-list` as a horizontal flex container with `overflow-x: auto` for scrolling and `gap: 1rem` between cards.
     - Style `.contact-card` with white background, rounded corners, padding, and min-width (~250px) so cards don't collapse.
     - Style action buttons: `.btn-accept` (green, matching theme `--success-color`), `.btn-decline` (red/dark), `.btn-details` (outline/secondary).
     - On mobile: cards scroll horizontally; on desktop: cards sit side-by-side (wrapping if many).
-- [ ] **2.2** Update HTML in `template.php` `#pending-contacts` section. The `.contacts-list` div is already present — cards will be injected here by JS. Add a loading placeholder (e.g., `<div class="loading-spinner"></div>`) inside `.contacts-list`.
-- [ ] **2.3** Each contact card should display (rendered by JS):
+- [x] **2.2** Update HTML in `template.php` `#pending-contacts` section. The `.contacts-list` div is already present — cards will be injected here by JS. Add a loading placeholder (e.g., `<div class="loading-spinner"></div>`) inside `.contacts-list`.
+- [x] **2.3** Each contact card should display (rendered by JS):
     - **Name** (bold, larger font)
     - **Location** (city, region, country — from contact's `location_grid_meta`)
     - **Gender** (from `gender` field)
     - **Age range** (from `age` field, e.g., "18-25 years old")
     - Three buttons: **Accept** (calls `POST /dt/v1/contact/{id}` to update `overall_status` to `active` and `assigned_to` to current user), **Decline** (updates `overall_status` to `unassigned` or removes assignment), **See Details** (navigates to `/contacts/{id}`).
-- [ ] **2.4** Add REST endpoint in `endpoints.php`: `GET dt/v1/dashboard/pending-contacts`
+- [x] **2.4** Add REST endpoint in `endpoints.php`: `GET dt/v1/dashboard/pending-contacts`
     - Query contacts where `assigned_to` is current user AND `overall_status` is one of: `unassigned`, `assigned` (pending acceptance). Use `DT_Posts::list_posts('contacts', ...)` with appropriate filters.
     - Return array of objects with: `id`, `name`, `location` (formatted string), `gender`, `age`, `permalink`.
     - Require `access_disciple_tools` capability.
-- [ ] **2.5** In `dashboard.js`: On page load, fetch pending contacts and render cards into `.contacts-list`. Wire up button click handlers. On Accept/Decline success, remove the card with a fade-out animation. If no pending contacts, show a friendly "No pending contacts" message.
-- [ ] **2.6** Hide the entire `#pending-contacts` section if the user has no pending contacts (check after fetch, remove section or add `.hidden` class).
+- [x] **2.5** In `dashboard.js`: On page load, fetch pending contacts and render cards into `.contacts-list`. Wire up button click handlers. On Accept/Decline success, remove the card with a fade-out animation. If no pending contacts, show a friendly "No pending contacts" message.
+- [x] **2.6** Hide the entire `#pending-contacts` section if the user has no pending contacts (check after fetch, remove section or add `.hidden` class).
 
 ---
 

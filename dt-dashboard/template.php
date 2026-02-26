@@ -9,17 +9,31 @@ if ( !current_user_can( 'access_disciple_tools' ) ) {
     exit();
 }
 
+$to_accept = DT_Posts::search_viewable_post( 'contacts', [
+    'overall_status' => [ 'assigned' ],
+    'assigned_to'    => [ 'me' ],
+    'type'           => [ 'access' ]
+] );
+
 get_header(); ?>
 
     <div class="template-dashboard">
-        <!-- Phase 2: Pending Contacts -->
+        <!-- Pending Contacts -->
+        <?php if ( ! empty( $to_accept['posts'] ) ): ?>
         <section id="pending-contacts">
             <div class="title-icon">
                 <img src="<?php echo esc_url( get_template_directory_uri() ) . '/dt-assets/images/assigned-to.svg' ?>" alt="">
             </div>
             <h2 class="title-label"><?php esc_html_e( 'Pending Contacts', 'disciple_tools' ) ?></h2>
-            <div class="contacts-list"></div>
+            <div class="contacts-list">
+                <?php
+                foreach ( $to_accept['posts'] as $contact ) :
+                    set_query_var( 'contact', $contact );
+                    get_template_part( 'dt-dashboard/parts/pending', 'contact-card' );
+                    endforeach; ?>
+            </div>
         </section>
+        <?php endif; ?>
 
         <section id="dashboard-grid">
 

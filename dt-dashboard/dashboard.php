@@ -34,8 +34,7 @@ class Disciple_Tools_Dashboard {
             add_action( 'wp_enqueue_scripts', [ $this, 'scripts' ], 11 ); // 11 priority after deprecated plugin
         }
 
-        require_once( 'endpoints.php' );
-        add_action( 'rest_api_init', [ 'Disciple_Tools_Dashboard_Endpoints', 'register_routes' ] );
+
 
         /**
          * Add Navigation Menu
@@ -65,7 +64,7 @@ class Disciple_Tools_Dashboard {
             'dt-dashboard-js',
             'dtDashboard',
             [
-                'rest_url' => esc_url_raw( rest_url( 'dt/v1/' ) ),
+                'rest_url_base' => esc_url_raw( rest_url() ),
                 'nonce'    => wp_create_nonce( 'wp_rest' ),
                 'current_user_id' => get_current_user_id(),
                 'translations' => [],
