@@ -34,13 +34,13 @@ All sections described below should match these mockups as closely as possible. 
 
 **Goal:** Set up the responsive grid layout within the existing SCSS and JS architecture so that subsequent phases can drop sections into place.
 
-- [ ] **1.1** Expand `dt-assets/scss/_dashboard.scss` to define the top-level `.template-dashboard` responsive grid layout:
+- [x] **1.1** Expand `dt-assets/scss/_dashboard.scss` to define the top-level `.template-dashboard` responsive grid layout:
     - Desktop (≥1024px): Use CSS Grid with named areas or a multi-column layout. The desktop mockup shows rows with varying column counts (full-width banner, 2-column middle sections, 3-column bottom row, 4-column stats row).
     - Tablet (768px–1023px): 2-column layout where possible, stacking to 1 column for complex sections.
     - Mobile (<768px): Single-column stacked layout matching the mobile mockup.
     - Add a shared `.dashboard-card` class for the white rounded-corner card style used by most sections (subtle `box-shadow`, `border-radius: 8px`, `padding: 1.5rem`, white background).
-- [ ] **1.2** Create `dt-dashboard/dashboard.js` and enqueue it in `dashboard.php` → `scripts()` method using `wp_enqueue_script()`. Set `in_footer` to `true`. Add `wp_localize_script()` to pass `dtDashboard` object with: `rest_url` (from `rest_url('dt/v1/')`), `nonce` (from `wp_create_nonce('wp_rest')`), `current_user_id`, and `translations` object.
-- [ ] **1.3** Update `template.php` to contain the full HTML skeleton with empty semantic section containers:
+- [x] **1.2** Create `dt-dashboard/dashboard.js` and enqueue it in `dashboard.php` → `scripts()` method using `wp_enqueue_script()`. Set `in_footer` to `true`. Add `wp_localize_script()` to pass `dtDashboard` object with: `rest_url` (from `rest_url('dt/v1/')`), `nonce` (from `wp_create_nonce('wp_rest')`), `current_user_id`, and `translations` object.
+- [x] **1.3** Update `template.php` to contain the full HTML skeleton with empty semantic section containers:
     - `<section id="pending-contacts">` (already exists — keep and extend)
     - `<section id="your-apps">`
     - `<section id="contact-workload">`
@@ -51,7 +51,7 @@ All sections described below should match these mockups as closely as possible. 
     - `<section id="seeker-path">`
     - `<section id="tasks">`
     - Each section should have a comment indicating which phase implements it.
-- [ ] **1.4** Create `dt-dashboard/endpoints.php` with a `Disciple_Tools_Dashboard_Endpoints` class. Register it via `rest_api_init` action in `dashboard.php`. Initially, the class can be a skeleton with empty route registrations that will be filled in by later phases.
+- [x] **1.4** Create `dt-dashboard/endpoints.php` with a `Disciple_Tools_Dashboard_Endpoints` class. Register it via `rest_api_init` action in `dashboard.php`. Initially, the class can be a skeleton with empty route registrations that will be filled in by later phases.
 
 ---
 

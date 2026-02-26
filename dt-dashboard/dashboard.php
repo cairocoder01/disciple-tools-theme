@@ -34,6 +34,9 @@ class Disciple_Tools_Dashboard {
             add_action( 'wp_enqueue_scripts', [ $this, 'scripts' ], 11 ); // 11 priority after deprecated plugin
         }
 
+        require_once( 'endpoints.php' );
+        add_action( 'rest_api_init', [ 'Disciple_Tools_Dashboard_Endpoints', 'register_routes' ] );
+
         /**
          * Add Navigation Menu
          */
@@ -55,6 +58,19 @@ class Disciple_Tools_Dashboard {
 
     public function scripts() {
         wp_dequeue_style( 'dashboard-css' ); // remove old plugin css
+
+        dt_theme_enqueue_script( 'dt-dashboard-js', 'dt-dashboard/dashboard.js', [] );
+
+        wp_localize_script(
+            'dt-dashboard-js',
+            'dtDashboard',
+            [
+                'rest_url' => esc_url_raw( rest_url( 'dt/v1/' ) ),
+                'nonce'    => wp_create_nonce( 'wp_rest' ),
+                'current_user_id' => get_current_user_id(),
+                'translations' => [],
+            ]
+        );
     }
 }
 

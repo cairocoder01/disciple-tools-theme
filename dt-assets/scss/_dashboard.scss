@@ -1,11 +1,12 @@
 .template-dashboard {
+
     #pending-contacts {
         background: var(--alert-color);
-        padding: 2rem;
+        padding: 2rem 1.5rem;
+        color: var(--text-color-inverse);
         display: grid;
         grid-template-columns: auto 1fr;
         grid-template-rows: auto 1fr;
-        color: var(--text-color-inverse);
         column-gap: 2rem;
 
         .title-icon {
@@ -21,6 +22,58 @@
         .title-label {
             font-size: 2.5rem;
             font-weight: 300;
+        }
+    }
+
+    #dashboard-grid {
+        // Mobile-first: single column layout by default
+        display: grid;
+        gap: 1.5rem;
+        padding: 1.5rem;
+
+        // Shared card style
+        .dashboard-card {
+            background: var(--surface-1);
+            border-radius: 8px;
+            box-shadow: var(--shadow-0);
+            padding: 1.5rem;
+        }
+
+        // Tablet layout
+        @media (min-width: 768px) {
+            grid-template-columns: 1fr 1fr;
+
+            #your-apps, #contact-workload {
+                grid-column: span 1;
+            }
+
+            .dashboard-card,
+            #stats-tiles {
+                grid-column: span 2;
+            }
+        }
+
+        // Desktop layout
+        @media (min-width: 1024px) {
+            grid-template-columns: repeat(12, 1fr);
+
+            #your-apps, #contact-workload {
+                grid-column: span 6;
+            }
+
+            #stats-tiles {
+                grid-column: span 12;
+            }
+
+            .post-list {
+                grid-column: span 6;
+            }
+
+            #faith-milestones,
+            #seeker-path,
+            #tasks {
+                grid-column: span 3;
+            }
         }
     }
 }
