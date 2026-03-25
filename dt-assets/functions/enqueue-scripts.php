@@ -136,6 +136,9 @@ function dt_site_scripts() {
                 'edit' => __( 'Edit', 'disciple_tools' ),
                 'copy' => __( 'Copy', 'disciple_tools' ),
                 'copied_text' => __( 'Copied: %s', 'disciple_tools' ),
+                'share' => __( 'Share', 'disciple_tools' ),
+                'follow' => __( 'Follow', 'disciple_tools' ),
+                'follow_help' => __( 'Toggle to follow or unfollow records', 'disciple_tools' ),
             ],
             'post_type' => $post_type,
             'url_path' => $url_path,
@@ -441,14 +444,7 @@ function dt_site_scripts() {
         wp_localize_script( 'dt-storage', 'storage_settings',
             [
                 'rest_url' => esc_url_raw( rest_url() ),
-                'accepted_file_types' => [
-                    'image/png',
-                    'image/gif',
-                    'image/jpeg',
-                    'image/jpg',
-                    'audio/*',
-                    'video/*'
-                ],
+                'accepted_file_types' => dt_get_default_accepted_file_types(),
                 'translations' => [
                     'modals' => [
                         'upload' => [
