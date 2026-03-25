@@ -38,7 +38,34 @@ get_header(); ?>
         <section id="dashboard-grid">
 
             <!-- Phase 3: Your Apps -->
-            <div id="your-apps" class="dashboard-card"></div>
+            <section id="your-apps">
+                <h2><span class="section-icon mdi mdi-apps"></span> <?php esc_html_e( 'Your Apps', 'disciple_tools' ) ?></h2>
+                <div class="apps-grid">
+                    <?php
+                    $apps = [];
+                    if ( class_exists( 'DT_Home_Apps' ) ) {
+                        $apps = DT_Home_Apps::instance()->get_apps_for_user( get_current_user_id() );
+                    }
+                    $apps = apply_filters( 'dt_dashboard_apps', $apps );
+
+                    if ( ! empty( $apps ) ) :
+                        foreach ( $apps as $app ) :
+                            $url   = esc_url( $app['url'] ?? '#' );
+                            $title = esc_html( $app['title'] ?? $app['name'] ?? '' );
+                            $icon  = $app['icon'] ?? '';
+                            ?>
+                            <a class="app-card" href="<?php echo $url; ?>" title="<?php echo $title; ?>">
+                                <span class="app-icon-box">
+                                    <span class="app-icon <?php echo esc_attr( $icon ); ?>"></span>
+                                </span>
+                                <span class="app-title"><?php echo $title; ?></span>
+                            </a>
+                        <?php endforeach;
+                    else : ?>
+                        <p class="no-apps-message"><?php esc_html_e( 'No apps available', 'disciple_tools' ) ?></p>
+                    <?php endif; ?>
+                </div>
+            </section>
 
             <!-- Phase 5: Contact Workload -->
             <div id="contact-workload" class="dashboard-card"></div>

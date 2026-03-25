@@ -86,22 +86,230 @@ All sections described below should match these mockups as closely as possible. 
 
 **Goal:** Row of icon buttons for quick navigation to frequently used pages. See the "Your Apps" row in both mockups — grid icon, list icons, group icon, plus icon, flag icon.
 
-- [ ] **3.1** Add `#your-apps` HTML structure to `template.php`:
+- [x] **3.1** Add `#your-apps` HTML structure to `template.php`:
     ```html
     <section id="your-apps">
         <h2><span class="grid-icon"></span> Your Apps</h2>
         <div class="apps-grid"></div>
     </section>
     ```
-- [ ] **3.2** Add styles to `_dashboard.scss`: `.apps-grid` should be a flex row with `gap: 1rem`, items centered. Each `.app-icon` is a square (roughly 60×60px) with an icon image/SVG, a label below, and a hover effect (slight scale or shadow). On mobile, make it horizontally scrollable with `overflow-x: auto`.
-- [ ] **3.3** Define the default apps list in PHP (in `dashboard.php` or a helper function) as an array of `['slug' => ..., 'label' => ..., 'icon' => ..., 'url' => ...]`. Default apps based on mockup:
+- [x] **3.2** Add styles to `_dashboard.scss` (reference `dt-apps/dt-home/assets/css/home-screen.css` for shared patterns):
+
+    #### Styling notes (from `dt-apps/dt-home` CSS)
+
+    **Container — horizontal scroll, no wrapping:**
+    The dashboard apps row must **never wrap** to a second line. Use a horizontal scroll container:
+    ```css
+    .apps-grid {
+        display: flex;
+        flex-direction: row;
+        gap: 1rem;
+        overflow-x: auto;
+        overflow-y: hidden;
+        flex-wrap: nowrap;           /* never wrap to second line */
+        padding: 0.5rem 10px;        /* 10px padding for gradient fade */
+        margin-inline: -10px;        /* Pull back to align with header */
+        width: calc(100% + 20px);
+        box-sizing: border-box;
+        scrollbar-width: thin;       /* Firefox: subtle scrollbar */
+        -webkit-overflow-scrolling: touch; /* iOS momentum scrolling */
+
+        /* Fade out overflow at ends */
+        mask-image: linear-gradient(to right, transparent, black 10px, black calc(100% - 10px), transparent);
+        -webkit-mask-image: linear-gradient(to right, transparent, black 10px, black calc(100% - 10px), transparent);
+    }
+    .apps-grid::-webkit-scrollbar {
+        height: 4px;
+    }
+    .apps-grid::-webkit-scrollbar-thumb {
+        background: var(--border-color, #e1e5e9);
+        border-radius: 2px;
+    }
+    ```
+    > **Note:** The dt-home screen uses `display: grid` with `repeat(auto-fit, minmax(75px, 1fr))` because it's the main app launcher and benefits from a reflowing grid. The dashboard "Your Apps" section is a *summary row* — it should use `display: flex` with `flex-wrap: nowrap` and `overflow-x: auto` so that excess apps scroll horizontally rather than wrapping to a new line.
+
+    **App card (shared from dt-home `home-screen.css` lines 393–423):**
+    ```css
+    .app-card {
+        background: var(--app-card-bg, #ffffff);
+        border: 1px solid var(--app-card-border, #e1e5e9);
+        border-radius: 24px;
+        padding: 0.6rem;
+        text-align: center;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        aspect-ratio: 1;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        width: 75px;
+        flex-shrink: 0;             /* prevent cards from shrinking in flex row */
+        transition: all 0.2s ease;
+    }
+    .app-card:hover {
+        transform: scale(1.05);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border-color: var(--primary-color, #3f729b);
+    }
+    ```
+
+    **App icon (shared from dt-home `home-screen.css` lines 425–435):**
+    ```css
+    .app-icon {
+        font-size: 2.1rem;
+        color: var(--app-icon-default, #0a0a0a);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 48px;
+        height: 48px;
+        transition: all 0.2s ease;
+    }
+    ```
+
+    **App title (shared from dt-home `home-screen.css` lines 437–451):**
+    ```css
+    .app-title {
+        font-size: 0.66rem;
+        font-weight: 500;
+        color: var(--text-color, #0a0a0a);
+        line-height: 1.2;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 75px;
+        width: 100%;
+        text-align: center;
+    }
+    ```
+
+    **CSS variables (reuse from dt-home or define locally):**
+    The dt-home stylesheet defines these variables that the dashboard should share or mirror:
+    ```css
+    :root {
+        --app-card-bg: #ffffff;
+        --app-card-border: #e1e5e9;
+        --app-card-text: #0a0a0a;
+        --app-icon-default: #0a0a0a;
+        --primary-color: #3f729b;
+        --border-color: #e1e5e9;
+        --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+        --shadow-md: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    /* Dark mode overrides (from dt-home body.theme-dark) */
+    body.theme-dark {
+        --app-card-bg: #2a2a2a;
+        --app-card-border: #404040;
+        --app-icon-default: #ffffff;
+        --primary-color: #4a9eff;
+    }
+    ```
+
+    **Responsive:** On larger screens (≥768px) the dt-home module switches to wider cards with side-by-side icon+label layout. For the dashboard summary row, keep the compact 75px square cards at all breakpoints since horizontal scroll handles overflow.
+- [x] **3.3** Define the default apps list in PHP (in `dashboard.php` or a helper function) as an array of `['slug' => ..., 'label' => ..., 'icon' => ..., 'url' => ...]`. Default apps based on mockup:
     - Home Screen → `/` (grid icon)
     - User Contact List → `/contacts` (list icon)
     - User Group List → `/groups` (people icon)
     - Create Contact → `/contacts/new` (plus icon)
     - My Coached Contacts → `/contacts?filter=coached_by_me` (flag icon — desktop only, or show on all)
-- [ ] **3.4** Pass the apps list through a WordPress filter: `$apps = apply_filters( 'dt_dashboard_apps', $default_apps );` and then pass to JS via `wp_localize_script()` or render directly in PHP.
-- [ ] **3.5** Render app icons in JS or directly in PHP template. Each app is an `<a>` tag linking to its URL.
+- [x] **3.4** Pass the apps list through a WordPress filter: `$apps = apply_filters( 'dt_dashboard_apps', $default_apps );` and then pass to JS via `wp_localize_script()` or render directly in PHP.
+- [x] **3.5** Render app icons in JS or directly in PHP template. Each app is an `<a>` tag linking to its URL.
+    - **Implementation details** (based on the in-theme `dt-apps/dt-home` module — see `dt-apps/dt-home/includes/class-home-apps.php`):
+
+    > **Note:** The standalone `dt-home` plugin (`disciple-tools-home-screen`) is **deprecated**. Its functionality has been reimplemented directly in the D.T theme at `dt-apps/dt-home/`. The dashboard should use the in-theme `DT_Home_Apps` class — no external plugin or DI container needed.
+
+    #### How the in-theme dt-home module manages apps (`DT_Home_Apps`)
+    The `DT_Home_Apps` singleton class (at `dt-apps/dt-home/includes/class-home-apps.php`) provides a complete app management system with multiple sources, admin customization, role-based permissions, and magic-link URL hydration. The dashboard "Your Apps" section should **directly use `DT_Home_Apps`** since it's part of the theme.
+
+    #### App data structure
+    Each app in `DT_Home_Apps` is an associative array with these keys:
+    ```php
+    [
+        'id'             => 'contacts',         // Unique identifier (same as slug for coded apps)
+        'slug'           => 'contacts',         // Unique slug
+        'creation_type'  => 'coded',            // 'coded' (from filter/magic-link) or 'custom' (admin-created)
+        'type'           => 'app',              // 'app' (magic-link/coded) or 'link' (simple URL)
+        'title'          => 'Contacts',         // Display label
+        'description'    => '',                 // App description
+        'url'            => '/contacts',         // Target URL (hydrated with magic-link key for coded apps)
+        'icon'           => 'mdi mdi-contacts', // MDI icon class or URL
+        'color'          => '',                 // Custom hex color (empty = default)
+        'enabled'        => true,               // Whether app is enabled
+        'order'          => 10,                 // Sort order (lower = first)
+        'roles'          => [],                 // Role-based access restrictions
+        'user_roles_type' => '',                // Role restriction type
+        'magic_link_meta' => [                  // Only for coded magic-link apps
+            'post_type' => 'user',
+            'root'      => 'apps',
+            'type'      => 'contacts',
+            'meta_key'  => 'apps_contacts_magic_key',
+        ],
+    ]
+    ```
+
+    #### App sources (layered architecture)
+    `DT_Home_Apps` aggregates apps from multiple sources during the `init` hook (priority 20):
+    1. **Magic Link Apps** (`load_magic_link_apps()`) — auto-discovered from all registered magic link types via `dt_magic_url_register_types` filter. Only apps with `meta.show_in_home_apps = true` or `templates/contacts` type are included. Stored in `$this->ml_apps`.
+    2. **Home Apps** (`load_home_apps()`) — coded apps registered by plugins/themes via the `dt_home_apps` WordPress filter. Stored in `$this->home_apps`.
+    3. **Database Apps** (`get_option('dt_home_apps')`) — admin-configured apps and customizations stored in `wp_options`. For coded apps, only customization fields (icon, color, enabled, order, roles) are stored and merged back. Full custom apps are stored entirely.
+
+    Apps from all sources are merged by `id` in `get_all_apps()`, with database customizations overlaid on coded app defaults.
+
+    #### Retrieving apps for the current user
+    Use `DT_Home_Apps::instance()->get_apps_for_user( $user_id )` — this is the primary method:
+    ```php
+    $apps_manager = DT_Home_Apps::instance();
+    $apps = $apps_manager->get_apps_for_user( get_current_user_id() );
+    ```
+    This method:
+    1. Calls `get_apps_for_frontend()` which merges all app sources, filters to enabled apps only, and hydrates magic-link URLs (resolves the user's magic key via `get_user_option()` and builds full URLs via `DT_Magic_URL::get_link_url()`)
+    2. Filters out apps the user doesn't have permission to access (role-based via `DT_Home_Roles_Permissions::filter_apps_by_permissions()`)
+    3. Sorts by `order` field
+
+    The magic-link-home-app also exposes a REST endpoint at `GET /apps/v1/launcher?action=get_apps` which returns the app list (see `magic-link-home-app.php` line 509), but for the dashboard we can call the PHP method directly since it's in-theme.
+
+    #### Registering apps via the `dt_home_apps` filter
+    Plugins and themes add apps using the `dt_home_apps` filter (consumed by `DT_Home_Apps::load_home_apps()`):
+    ```php
+    add_filter( 'dt_home_apps', function ( $apps ) {
+        $apps[] = [
+            'name' => 'Contacts',
+            'type' => 'link',           // 'app' or 'link'
+            'icon' => 'mdi mdi-contacts',
+            'url'  => site_url( '/contacts' ),
+            'sort' => 10,
+            'slug' => 'contacts',
+        ];
+        $apps[] = [
+            'name' => 'Groups',
+            'type' => 'link',
+            'icon' => 'mdi mdi-account-group',
+            'url'  => site_url( '/groups' ),
+            'sort' => 20,
+            'slug' => 'groups',
+        ];
+        return $apps;
+    } );
+    ```
+
+    #### Recommended approach for the dashboard
+    Since `DT_Home_Apps` is now part of the theme (not a separate plugin), the dashboard can **always** use it directly — no need to check if a plugin is installed:
+    ```php
+    // In the dashboard template or endpoint:
+    $apps_manager = DT_Home_Apps::instance();
+    $apps = $apps_manager->get_apps_for_user( get_current_user_id() );
+
+    // Pass to JS via wp_localize_script() or render directly in PHP template
+    wp_localize_script( 'dt-dashboard', 'dtDashboard', [
+        'apps' => $apps,
+        // ... other dashboard data
+    ] );
+    ```
+    This gives the dashboard the same app list as the home screen, including admin customizations, role-based filtering, and magic-link URL hydration — with zero duplication.
+
+    #### Performance note
+    Retrieving the app list is lightweight — `get_all_apps()` reads from `wp_options` (one row, auto-loaded by WordPress) and merges with in-memory coded apps. The `dt_home_apps` and `dt_magic_url_register_types` filters run PHP callbacks in memory. Magic-link URL hydration calls `get_user_option()` per coded app (cached after first read). No database joins or expensive queries are involved. The entire operation is suitable for synchronous rendering in the PHP template (no need for a separate REST endpoint). If rendering via JS, pass the apps array via `wp_localize_script()` to avoid an extra HTTP round-trip.
 
 ---
 
@@ -131,9 +339,109 @@ All sections described below should match these mockups as closely as possible. 
     ```
 - [ ] **4.2** Add styles to `_dashboard.scss`: `.stats-grid` uses CSS Grid with `grid-template-columns: repeat(4, 1fr)` on desktop, `repeat(2, 1fr)` on mobile. Each `.stat-tile` is a white card (use `.dashboard-card` mixin/class), centered text, `.stat-count` in large bold font (~2.5rem), `.stat-label` smaller above it, `.stat-link` smaller below in theme link color.
 - [ ] **4.3** Add REST endpoint: `GET dt/v1/dashboard/stats`
-    - Use `DT_Posts::list_posts()` with `limit=0` (or use `$wpdb` count queries for performance) for each of the four metrics.
-    - Return: `{ "active_contacts": 12, "update_needed": 9, "contact_attempt_needed": 2, "active_groups": 2 }`.
     - Require `access_disciple_tools` capability.
+    - Return: `{ "active_contacts": 12, "update_needed": 9, "contact_attempt_needed": 2, "active_groups": 2 }`.
+    - **Implementation details per stat** (based on the previous `disciple-tools-dashboard` plugin's `rest-api.php`):
+
+    #### Active Contacts
+    The previous plugin used a direct `$wpdb` count query for performance (see `get_active_contacts()` in the old plugin). This is the recommended approach:
+    ```php
+    $active_contacts = $wpdb->get_var( $wpdb->prepare( "
+        SELECT count(a.ID)
+        FROM $wpdb->posts as a
+        INNER JOIN $wpdb->postmeta as assigned_to
+            ON a.ID = assigned_to.post_id
+            AND assigned_to.meta_key = 'assigned_to'
+            AND assigned_to.meta_value = CONCAT( 'user-', %s )
+        JOIN $wpdb->postmeta as b
+            ON a.ID = b.post_id
+            AND b.meta_key = 'overall_status'
+            AND b.meta_value = 'active'
+        WHERE a.post_status = 'publish'
+            AND post_type = 'contacts'
+            AND a.ID NOT IN (
+                SELECT post_id FROM $wpdb->postmeta
+                WHERE meta_key = 'type' AND meta_value = 'user'
+                GROUP BY post_id
+            )
+    ", get_current_user_id() ) );
+    ```
+    Key points: filters to `assigned_to = 'user-{current_user_id}'`, `overall_status = 'active'`, `post_type = 'contacts'`, excludes contacts where `type = 'user'` (user-type contacts are internal D.T records, not real contacts).
+
+    #### Update Needed
+    The previous plugin used `DT_Posts::search_viewable_post()` (now `DT_Posts::list_posts()`):
+    ```php
+    $update_needed = DT_Posts::list_posts( 'contacts', [
+        'requires_update' => [ 'true' ],
+        'assigned_to'     => [ 'me' ],
+        'overall_status'  => [ '-closed' ],
+        'sort'            => 'last_modified',
+        'limit'           => 0,
+    ] );
+    $update_needed_count = $update_needed['total'] ?? 0;
+    ```
+    Alternatively, a direct `$wpdb` count query joining on `meta_key = 'requires_update'` with `meta_value = 'yes'` would be more performant if only the count is needed.
+
+    #### Contact Attempt Needed
+    This stat was not in the previous plugin. Query contacts assigned to the current user where `seeker_path = 'none'` and `overall_status = 'active'`:
+    ```php
+    $contact_attempt_needed = DT_Posts::list_posts( 'contacts', [
+        'seeker_path'    => [ 'none' ],
+        'overall_status' => [ 'active' ],
+        'assigned_to'    => [ 'me' ],
+        'limit'          => 0,
+    ] );
+    $contact_attempt_count = $contact_attempt_needed['total'] ?? 0;
+    ```
+    Or use a direct `$wpdb` count query for better performance:
+    ```php
+    $contact_attempt_count = $wpdb->get_var( $wpdb->prepare( "
+        SELECT count(a.ID)
+        FROM $wpdb->posts as a
+        INNER JOIN $wpdb->postmeta as assigned_to
+            ON a.ID = assigned_to.post_id
+            AND assigned_to.meta_key = 'assigned_to'
+            AND assigned_to.meta_value = CONCAT( 'user-', %s )
+        JOIN $wpdb->postmeta as status
+            ON a.ID = status.post_id
+            AND status.meta_key = 'overall_status'
+            AND status.meta_value = 'active'
+        JOIN $wpdb->postmeta as seeker
+            ON a.ID = seeker.post_id
+            AND seeker.meta_key = 'seeker_path'
+            AND seeker.meta_value = 'none'
+        WHERE a.post_status = 'publish'
+            AND post_type = 'contacts'
+            AND a.ID NOT IN (
+                SELECT post_id FROM $wpdb->postmeta
+                WHERE meta_key = 'type' AND meta_value = 'user'
+                GROUP BY post_id
+            )
+    ", get_current_user_id() ) );
+    ```
+
+    #### Active Groups
+    This stat was not in the previous plugin. Use the same direct query pattern but for groups:
+    ```php
+    $active_groups = $wpdb->get_var( $wpdb->prepare( "
+        SELECT count(a.ID)
+        FROM $wpdb->posts as a
+        INNER JOIN $wpdb->postmeta as assigned_to
+            ON a.ID = assigned_to.post_id
+            AND assigned_to.meta_key = 'assigned_to'
+            AND assigned_to.meta_value = CONCAT( 'user-', %s )
+        JOIN $wpdb->postmeta as status
+            ON a.ID = status.post_id
+            AND status.meta_key = 'group_status'
+            AND status.meta_value = 'active'
+        WHERE a.post_status = 'publish'
+            AND post_type = 'groups'
+    ", get_current_user_id() ) );
+    ```
+    Note: Groups use `group_status` instead of `overall_status`, and the `type != 'user'` exclusion is not needed for groups.
+
+    #### Performance note
+    The previous plugin favored direct `$wpdb` queries over `DT_Posts` API calls for count-only stats. This is recommended here as well — `DT_Posts::list_posts()` with `limit=0` still loads all matching post data which is wasteful when only a count is needed. Direct SQL count queries are significantly faster, especially for users with many contacts. Consider combining multiple counts into a single endpoint call to reduce HTTP overhead (the old plugin's `get_other_stats()` method bundled multiple stats into one response).
 - [ ] **4.4** In `dashboard.js`: Fetch stats on page load, populate each `.stat-count` by matching `data-stat` attribute. Show "—" or a spinner while loading.
 
 ---
@@ -162,7 +470,54 @@ All sections described below should match these mockups as closely as possible. 
     </section>
     ```
 - [ ] **5.2** Styles in `_dashboard.scss`: `.workload-options` is a flex row. Each `.workload-btn` has a distinct left-border or background color: green for accepting (`--success-color`), orange for investing (`--warning-color`), red for too-many (`--alert-color`). The currently active option should be visually highlighted (e.g., filled background, others outlined). On mobile, stack buttons vertically.
-- [ ] **5.3** Add REST endpoints: `GET dt/v1/dashboard/workload-status` (returns current user's workload status) and `PUT dt/v1/dashboard/workload-status` (updates it). Use existing user meta key `workload_status` — check how the existing D.T codebase stores this (likely in `dt_user_meta` or `usermeta` table).
+- [ ] **5.3** Add REST endpoints: `GET dt/v1/dashboard/workload-status` (returns current user's workload status) and `PUT dt/v1/dashboard/workload-status` (updates it).
+    - Require `access_disciple_tools` capability.
+    - **Implementation details** (based on the previous `disciple-tools-dashboard` plugin's `rest-api.php`):
+
+    #### How workload status is stored
+    The previous plugin stored the workload status as a **WordPress user option** via `update_user_option()`. The relevant code from the old plugin's `update_user()` method (`POST /user` endpoint):
+    ```php
+    public function update_user( WP_REST_Request $request ) {
+        $body = $request->get_json_params();
+        $user = wp_get_current_user();
+        if ( !empty( $body['workload_status'] ) ) {
+            update_user_option( $user->ID, 'workload_status', $body['workload_status'] );
+        }
+        return true;
+    }
+    ```
+    Key points:
+    - Uses `update_user_option()` / `get_user_option()` (stores in `wp_usermeta` with a blog-prefix key), **not** `dt_user_meta`.
+    - The status values are strings: `'active'` (accepting), `'existing'` (investing in existing only), `'too_many'` (too many contacts).
+    - The old plugin combined this into a generic `POST /user` endpoint. For our implementation, dedicated `GET` and `PUT` endpoints are cleaner.
+
+    #### GET endpoint (read current status)
+    ```php
+    public static function get_workload_status( $request ) {
+        $user_id = get_current_user_id();
+        $status = get_user_option( 'workload_status', $user_id );
+        return [
+            'workload_status' => $status ?: 'active', // default to 'active' if not set
+        ];
+    }
+    ```
+
+    #### PUT endpoint (update status)
+    ```php
+    public static function update_workload_status( $request ) {
+        $body = $request->get_json_params();
+        $user_id = get_current_user_id();
+        $allowed = [ 'active', 'existing', 'too_many' ];
+        if ( empty( $body['workload_status'] ) || !in_array( $body['workload_status'], $allowed, true ) ) {
+            return new WP_Error( 'invalid_status', 'Invalid workload status.', [ 'status' => 400 ] );
+        }
+        update_user_option( $user_id, 'workload_status', sanitize_text_field( $body['workload_status'] ) );
+        return [ 'workload_status' => $body['workload_status'] ];
+    }
+    ```
+
+    #### Performance note
+    Reading/writing a single user option is already very fast (single row lookup in `wp_usermeta`). No optimization needed beyond standard WordPress caching, which `get_user_option()` benefits from automatically. The old plugin's approach of using `update_user_option()` is the correct and most performant way to store per-user settings like this — avoid using `DT_Posts` or custom tables for simple user preferences.
 - [ ] **5.4** In `dashboard.js`: On load, fetch current status and highlight the matching button. On button click, PUT the new status and update UI. Add a `.selected` class to the active button.
 - [ ] **5.5** Layout: On desktop, this section sits to the right of "Your Apps" (they share a row). On mobile, it stacks below "Your Apps".
 
