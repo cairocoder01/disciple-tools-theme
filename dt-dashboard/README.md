@@ -30,439 +30,58 @@ All sections described below should match these mockups as closely as possible. 
 
 ---
 
-### Phase 1: Foundation & Layout Scaffolding
+### Layout & Foundation
 
-**Goal:** Set up the responsive grid layout within the existing SCSS and JS architecture so that subsequent phases can drop sections into place.
+The dashboard is built on a responsive grid system defined in `_dashboard.scss` and `template.php`.
 
-- [x] **1.1** Expand `dt-assets/scss/_dashboard.scss` to define the top-level `.template-dashboard` responsive grid layout:
-    - Desktop (≥1024px): Use CSS Grid with named areas or a multi-column layout. The desktop mockup shows rows with varying column counts (full-width banner, 2-column middle sections, 3-column bottom row, 4-column stats row).
-    - Tablet (768px–1023px): 2-column layout where possible, stacking to 1 column for complex sections.
-    - Mobile (<768px): Single-column stacked layout matching the mobile mockup.
-    - Add a shared `.dashboard-card` class for the white rounded-corner card style used by most sections (subtle `box-shadow`, `border-radius: 8px`, `padding: 1.5rem`, white background).
-- [x] **1.2** Create `dt-dashboard/dashboard.js` and enqueue it in `dashboard.php` → `scripts()` method using `wp_enqueue_script()`. Set `in_footer` to `true`. Add `wp_localize_script()` to pass `dtDashboard` object with: `rest_url` (from `rest_url('dt/v1/')`), `nonce` (from `wp_create_nonce('wp_rest')`), `current_user_id`, and `translations` object.
-- [x] **1.3** Update `template.php` to contain the full HTML skeleton with empty semantic section containers:
-    - `<section id="pending-contacts">` (already exists — keep and extend)
-    - `<section id="your-apps">`
-    - `<section id="contact-workload">`
-    - `<section id="stats-tiles">`
-    - `<section id="recent-contacts">`
-    - `<section id="recent-groups">`
-    - `<section id="faith-milestones">`
-    - `<section id="seeker-path">`
-    - `<section id="tasks">`
-    - Each section should have a comment indicating which phase implements it.
-- [x] **1.4** Create `dt-dashboard/endpoints.php` with a `Disciple_Tools_Dashboard_Endpoints` class. Register it via `rest_api_init` action in `dashboard.php`. Initially, the class can be a skeleton with empty route registrations that will be filled in by later phases.
+- **Responsive Grid:** 
+    - **Desktop (≥1024px):** Uses a 12-column CSS Grid. Layout areas are defined by span counts (e.g., stats tiles span 3 columns each for a 4-across row).
+    - **Tablet (768px–1023px):** Shifts to a 4-column or 2-column layout depending on the section complexity.
+    - **Mobile (<768px):** Single-column stacked layout.
+- **Card UI:** A shared `.dashboard-card` class provides the consistent white background, rounded corners (8px), and subtle shadows used across most sections.
+- **Assets:** 
+    - `dashboard.js` handles client-side interactions (Accept/Decline, fetching dynamic stats).
+    - `endpoints.php` provides the `dt/v1/dashboard/` REST API namespace.
 
 ---
 
-### Phase 2: Pending Contacts Section (Top Banner)
+### Pending Contacts Section
 
-**Goal:** Full-width orange/blue banner at top of page with horizontally scrollable contact cards. SCSS foundation already exists in `_dashboard.scss` (lines 2–25 define the grid layout, icon styling, and title).
+A full-width highlight banner at the top of the dashboard for contacts requiring immediate action.
 
-**Visual reference:** Top section of both mockups — orange background, large semi-transparent contact icon on left, "Pending Contacts" title, and white contact cards.
-
-- [x] **2.1** Extend `#pending-contacts` styles in `_dashboard.scss`:
-    - Add `.contacts-list` as a horizontal flex container with `overflow-x: auto` for scrolling and `gap: 1rem` between cards.
-    - Style `.contact-card` with white background, rounded corners, padding, and min-width (~250px) so cards don't collapse.
-    - Style action buttons: `.btn-accept` (green, matching theme `--success-color`), `.btn-decline` (red/dark), `.btn-details` (outline/secondary).
-    - On mobile: cards scroll horizontally; on desktop: cards sit side-by-side (wrapping if many).
-- [x] **2.2** Update HTML in `template.php` `#pending-contacts` section. The `.contacts-list` div is already present — cards will be injected here by JS. Add a loading placeholder (e.g., `<div class="loading-spinner"></div>`) inside `.contacts-list`.
-- [x] **2.3** Each contact card should display (rendered by JS):
-    - **Name** (bold, larger font)
-    - **Location** (city, region, country — from contact's `location_grid_meta`)
-    - **Gender** (from `gender` field)
-    - **Age range** (from `age` field, e.g., "18-25 years old")
-    - Three buttons: **Accept** (calls `POST /dt/v1/contact/{id}` to update `overall_status` to `active` and `assigned_to` to current user), **Decline** (updates `overall_status` to `unassigned` or removes assignment), **See Details** (navigates to `/contacts/{id}`).
-- [x] **2.4** Add REST endpoint in `endpoints.php`: `GET dt/v1/dashboard/pending-contacts`
-    - Query contacts where `assigned_to` is current user AND `overall_status` is one of: `unassigned`, `assigned` (pending acceptance). Use `DT_Posts::list_posts('contacts', ...)` with appropriate filters.
-    - Return array of objects with: `id`, `name`, `location` (formatted string), `gender`, `age`, `permalink`.
-    - Require `access_disciple_tools` capability.
-- [x] **2.5** In `dashboard.js`: On page load, fetch pending contacts and render cards into `.contacts-list`. Wire up button click handlers. On Accept/Decline success, remove the card with a fade-out animation. If no pending contacts, show a friendly "No pending contacts" message.
-- [x] **2.6** Hide the entire `#pending-contacts` section if the user has no pending contacts (check after fetch, remove section or add `.hidden` class).
+- **Visuals:** Orange background with a large semi-transparent icon. Horizontal scrolling list of cards.
+- **Implementation:** 
+    - PHP renders the initial list using `DT_Posts::search_viewable_post` for performance on first load.
+    - `dashboard.js` handles the "Accept" and "Decline" actions via the `dt/v1/contacts/{id}/accept` endpoint.
+    - Successfully accepted/declined cards are removed with a fade-out animation.
+- **Deep Link:** "See Details" links directly to the contact's record.
 
 ---
 
-### Phase 3: Your Apps Section
+### Your Apps Section
 
-**Goal:** Row of icon buttons for quick navigation to frequently used pages. See the "Your Apps" row in both mockups — grid icon, list icons, group icon, plus icon, flag icon.
+A row of quick-access icons for frequently used D.T. modules.
 
-- [x] **3.1** Add `#your-apps` HTML structure to `template.php`:
-    ```html
-    <section id="your-apps">
-        <h2><span class="grid-icon"></span> Your Apps</h2>
-        <div class="apps-grid"></div>
-    </section>
-    ```
-- [x] **3.2** Add styles to `_dashboard.scss` (reference `dt-apps/dt-home/assets/css/home-screen.css` for shared patterns):
-
-    #### Styling notes (from `dt-apps/dt-home` CSS)
-
-    **Container — horizontal scroll, no wrapping:**
-    The dashboard apps row must **never wrap** to a second line. Use a horizontal scroll container:
-    ```css
-    .apps-grid {
-        display: flex;
-        flex-direction: row;
-        gap: 1rem;
-        overflow-x: auto;
-        overflow-y: hidden;
-        flex-wrap: nowrap;           /* never wrap to second line */
-        padding: 0.5rem 10px;        /* 10px padding for gradient fade */
-        margin-inline: -10px;        /* Pull back to align with header */
-        width: calc(100% + 20px);
-        box-sizing: border-box;
-        scrollbar-width: thin;       /* Firefox: subtle scrollbar */
-        -webkit-overflow-scrolling: touch; /* iOS momentum scrolling */
-
-        /* Fade out overflow at ends */
-        mask-image: linear-gradient(to right, transparent, black 10px, black calc(100% - 10px), transparent);
-        -webkit-mask-image: linear-gradient(to right, transparent, black 10px, black calc(100% - 10px), transparent);
-    }
-    .apps-grid::-webkit-scrollbar {
-        height: 4px;
-    }
-    .apps-grid::-webkit-scrollbar-thumb {
-        background: var(--border-color, #e1e5e9);
-        border-radius: 2px;
-    }
-    ```
-    > **Note:** The dt-home screen uses `display: grid` with `repeat(auto-fit, minmax(75px, 1fr))` because it's the main app launcher and benefits from a reflowing grid. The dashboard "Your Apps" section is a *summary row* — it should use `display: flex` with `flex-wrap: nowrap` and `overflow-x: auto` so that excess apps scroll horizontally rather than wrapping to a new line.
-
-    **App card (shared from dt-home `home-screen.css` lines 393–423):**
-    ```css
-    .app-card {
-        background: var(--app-card-bg, #ffffff);
-        border: 1px solid var(--app-card-border, #e1e5e9);
-        border-radius: 24px;
-        padding: 0.6rem;
-        text-align: center;
-        cursor: pointer;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        aspect-ratio: 1;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        width: 75px;
-        flex-shrink: 0;             /* prevent cards from shrinking in flex row */
-        transition: all 0.2s ease;
-    }
-    .app-card:hover {
-        transform: scale(1.05);
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        border-color: var(--primary-color, #3f729b);
-    }
-    ```
-
-    **App icon (shared from dt-home `home-screen.css` lines 425–435):**
-    ```css
-    .app-icon {
-        font-size: 2.1rem;
-        color: var(--app-icon-default, #0a0a0a);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 48px;
-        height: 48px;
-        transition: all 0.2s ease;
-    }
-    ```
-
-    **App title (shared from dt-home `home-screen.css` lines 437–451):**
-    ```css
-    .app-title {
-        font-size: 0.66rem;
-        font-weight: 500;
-        color: var(--text-color, #0a0a0a);
-        line-height: 1.2;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        max-width: 75px;
-        width: 100%;
-        text-align: center;
-    }
-    ```
-
-    **CSS variables (reuse from dt-home or define locally):**
-    The dt-home stylesheet defines these variables that the dashboard should share or mirror:
-    ```css
-    :root {
-        --app-card-bg: #ffffff;
-        --app-card-border: #e1e5e9;
-        --app-card-text: #0a0a0a;
-        --app-icon-default: #0a0a0a;
-        --primary-color: #3f729b;
-        --border-color: #e1e5e9;
-        --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
-        --shadow-md: 0 2px 8px rgba(0,0,0,0.1);
-    }
-    /* Dark mode overrides (from dt-home body.theme-dark) */
-    body.theme-dark {
-        --app-card-bg: #2a2a2a;
-        --app-card-border: #404040;
-        --app-icon-default: #ffffff;
-        --primary-color: #4a9eff;
-    }
-    ```
-
-    **Responsive:** On larger screens (≥768px) the dt-home module switches to wider cards with side-by-side icon+label layout. For the dashboard summary row, keep the compact 75px square cards at all breakpoints since horizontal scroll handles overflow.
-- [x] **3.3** Define the default apps list in PHP (in `dashboard.php` or a helper function) as an array of `['slug' => ..., 'label' => ..., 'icon' => ..., 'url' => ...]`. Default apps based on mockup:
-    - Home Screen → `/` (grid icon)
-    - User Contact List → `/contacts` (list icon)
-    - User Group List → `/groups` (people icon)
-    - Create Contact → `/contacts/new` (plus icon)
-    - My Coached Contacts → `/contacts?filter=coached_by_me` (flag icon — desktop only, or show on all)
-- [x] **3.4** Pass the apps list through a WordPress filter: `$apps = apply_filters( 'dt_dashboard_apps', $default_apps );` and then pass to JS via `wp_localize_script()` or render directly in PHP.
-- [x] **3.5** Render app icons in JS or directly in PHP template. Each app is an `<a>` tag linking to its URL.
-    - **Implementation details** (based on the in-theme `dt-apps/dt-home` module — see `dt-apps/dt-home/includes/class-home-apps.php`):
-
-    > **Note:** The standalone `dt-home` plugin (`disciple-tools-home-screen`) is **deprecated**. Its functionality has been reimplemented directly in the D.T theme at `dt-apps/dt-home/`. The dashboard should use the in-theme `DT_Home_Apps` class — no external plugin or DI container needed.
-
-    #### How the in-theme dt-home module manages apps (`DT_Home_Apps`)
-    The `DT_Home_Apps` singleton class (at `dt-apps/dt-home/includes/class-home-apps.php`) provides a complete app management system with multiple sources, admin customization, role-based permissions, and magic-link URL hydration. The dashboard "Your Apps" section should **directly use `DT_Home_Apps`** since it's part of the theme.
-
-    #### App data structure
-    Each app in `DT_Home_Apps` is an associative array with these keys:
-    ```php
-    [
-        'id'             => 'contacts',         // Unique identifier (same as slug for coded apps)
-        'slug'           => 'contacts',         // Unique slug
-        'creation_type'  => 'coded',            // 'coded' (from filter/magic-link) or 'custom' (admin-created)
-        'type'           => 'app',              // 'app' (magic-link/coded) or 'link' (simple URL)
-        'title'          => 'Contacts',         // Display label
-        'description'    => '',                 // App description
-        'url'            => '/contacts',         // Target URL (hydrated with magic-link key for coded apps)
-        'icon'           => 'mdi mdi-contacts', // MDI icon class or URL
-        'color'          => '',                 // Custom hex color (empty = default)
-        'enabled'        => true,               // Whether app is enabled
-        'order'          => 10,                 // Sort order (lower = first)
-        'roles'          => [],                 // Role-based access restrictions
-        'user_roles_type' => '',                // Role restriction type
-        'magic_link_meta' => [                  // Only for coded magic-link apps
-            'post_type' => 'user',
-            'root'      => 'apps',
-            'type'      => 'contacts',
-            'meta_key'  => 'apps_contacts_magic_key',
-        ],
-    ]
-    ```
-
-    #### App sources (layered architecture)
-    `DT_Home_Apps` aggregates apps from multiple sources during the `init` hook (priority 20):
-    1. **Magic Link Apps** (`load_magic_link_apps()`) — auto-discovered from all registered magic link types via `dt_magic_url_register_types` filter. Only apps with `meta.show_in_home_apps = true` or `templates/contacts` type are included. Stored in `$this->ml_apps`.
-    2. **Home Apps** (`load_home_apps()`) — coded apps registered by plugins/themes via the `dt_home_apps` WordPress filter. Stored in `$this->home_apps`.
-    3. **Database Apps** (`get_option('dt_home_apps')`) — admin-configured apps and customizations stored in `wp_options`. For coded apps, only customization fields (icon, color, enabled, order, roles) are stored and merged back. Full custom apps are stored entirely.
-
-    Apps from all sources are merged by `id` in `get_all_apps()`, with database customizations overlaid on coded app defaults.
-
-    #### Retrieving apps for the current user
-    Use `DT_Home_Apps::instance()->get_apps_for_user( $user_id )` — this is the primary method:
-    ```php
-    $apps_manager = DT_Home_Apps::instance();
-    $apps = $apps_manager->get_apps_for_user( get_current_user_id() );
-    ```
-    This method:
-    1. Calls `get_apps_for_frontend()` which merges all app sources, filters to enabled apps only, and hydrates magic-link URLs (resolves the user's magic key via `get_user_option()` and builds full URLs via `DT_Magic_URL::get_link_url()`)
-    2. Filters out apps the user doesn't have permission to access (role-based via `DT_Home_Roles_Permissions::filter_apps_by_permissions()`)
-    3. Sorts by `order` field
-
-    The magic-link-home-app also exposes a REST endpoint at `GET /apps/v1/launcher?action=get_apps` which returns the app list (see `magic-link-home-app.php` line 509), but for the dashboard we can call the PHP method directly since it's in-theme.
-
-    #### Registering apps via the `dt_home_apps` filter
-    Plugins and themes add apps using the `dt_home_apps` filter (consumed by `DT_Home_Apps::load_home_apps()`):
-    ```php
-    add_filter( 'dt_home_apps', function ( $apps ) {
-        $apps[] = [
-            'name' => 'Contacts',
-            'type' => 'link',           // 'app' or 'link'
-            'icon' => 'mdi mdi-contacts',
-            'url'  => site_url( '/contacts' ),
-            'sort' => 10,
-            'slug' => 'contacts',
-        ];
-        $apps[] = [
-            'name' => 'Groups',
-            'type' => 'link',
-            'icon' => 'mdi mdi-account-group',
-            'url'  => site_url( '/groups' ),
-            'sort' => 20,
-            'slug' => 'groups',
-        ];
-        return $apps;
-    } );
-    ```
-
-    #### Recommended approach for the dashboard
-    Since `DT_Home_Apps` is now part of the theme (not a separate plugin), the dashboard can **always** use it directly — no need to check if a plugin is installed:
-    ```php
-    // In the dashboard template or endpoint:
-    $apps_manager = DT_Home_Apps::instance();
-    $apps = $apps_manager->get_apps_for_user( get_current_user_id() );
-
-    // Pass to JS via wp_localize_script() or render directly in PHP template
-    wp_localize_script( 'dt-dashboard', 'dtDashboard', [
-        'apps' => $apps,
-        // ... other dashboard data
-    ] );
-    ```
-    This gives the dashboard the same app list as the home screen, including admin customizations, role-based filtering, and magic-link URL hydration — with zero duplication.
-
-    #### Performance note
-    Retrieving the app list is lightweight — `get_all_apps()` reads from `wp_options` (one row, auto-loaded by WordPress) and merges with in-memory coded apps. The `dt_home_apps` and `dt_magic_url_register_types` filters run PHP callbacks in memory. Magic-link URL hydration calls `get_user_option()` per coded app (cached after first read). No database joins or expensive queries are involved. The entire operation is suitable for synchronous rendering in the PHP template (no need for a separate REST endpoint). If rendering via JS, pass the apps array via `wp_localize_script()` to avoid an extra HTTP round-trip.
+- **Data Source:** Directly integrates with the `DT_Home_Apps` singleton class, ensuring consistency with the main "Home Screen" app launcher.
+- **Visuals:** Compact 75px square cards with a horizontal flex-scroll container. Features a CSS `mask-image` gradient to fade out overlapping content at the edges.
+- **Customization:** Respects the `dt_dashboard_apps` filter, allowing plugins to add or remove dashboard apps independently of the main app list.
 
 ---
 
-### Phase 4: Stats Tiles Row
+### Stats Tiles Row
 
-**Goal:** Four summary count tiles in a row, each showing a metric name, large number, and "See all >" link. See both mockups — the row of 4 white cards below the apps section.
+Four high-level summary metrics that provide quick counts and deep links to filtered lists.
 
-| Tile | Description | "See all" Link (Refined) |
-|------|-------------|-------------------------|
-| Active Contacts | Count of user's contacts with `overall_status` = `active` | `/contacts?filter_id=my_active&query=...&labels=...` |
-| Update Needed | Contacts with `requires_update` = `true` | `/contacts?filter_id=my_update_needed&query=...&labels=...` |
-| Contact Attempt Needed | Contacts with `seeker_path` = `none` and status `active` | `/contacts?filter_id=my_none&query=...&labels=...` |
-| Active Groups | Count of user's groups with `group_status` = `active` | `/groups?filter_id=my_active&query=...&labels=...` |
-
-> **Note on Deep Linking:** D.T list pages use base64-encoded JSON for `query` and `labels` parameters. To ensure the link correctly applies the filter and shows the right labels in the UI, use the `Disciple_Tools_Dashboard::get_list_url()` helper (see implementation in `dashboard.php`).
-
-#### Deep Link Query/Label Structures
-
-**Active Contacts**
-- **Query:** `{"assigned_to":["me"],"subassigned":["me"],"combine":["subassigned"],"type":["access"],"overall_status":["active"],"sort":"seeker_path"}`
-- **Labels:** `[{"name":"Active"},{"name":"Assigned to me","field":"assigned_to","id":"me"},{"name":"Sub-assigned to me","field":"subassigned","id":"me"}]`
-
-**Update Needed**
-- **Query:** `{"assigned_to":["me"],"subassigned":["me"],"combine":["subassigned"],"overall_status":["active"],"requires_update":[true],"type":["access"],"sort":"seeker_path"}`
-- **Labels:** `[{"name":"Update Needed"},{"name":"Assigned to me","field":"assigned_to","id":"me"},{"name":"Sub-assigned to me","field":"subassigned","id":"me"}]`
-
-**Contact Attempt Needed**
-- **Query:** `{"assigned_to":["me"],"subassigned":["me"],"combine":["subassigned"],"overall_status":["active"],"seeker_path":["none"],"type":["access"],"sort":"name"}`
-- **Labels:** `[{"name":"Contact Attempt Needed"},{"name":"Assigned to me","field":"assigned_to","id":"me"},{"name":"Sub-assigned to me","field":"subassigned","id":"me"}]`
-
-**Active Groups**
-- **Query:** `{"assigned_to":["me"],"group_status":["active"]}`
-- **Labels:** `[{"name":"Active"}]`
-
-- [x] **4.1** Add `#stats-tiles` HTML to `template.php`:
-    ```html
-    <section id="stats-tiles">
-        <div class="stats-grid">
-            <div class="stat-tile" data-stat="active_contacts">
-                <span class="stat-label">Active Contacts</span>
-                <span class="stat-count">—</span>
-                <a class="stat-link" href="/contacts?status=active">See all &gt;</a>
-            </div>
-            <!-- repeat for other 3 tiles -->
-        </div>
-    </section>
-    ```
-- [x] **4.2** Add styles to `_dashboard.scss`: `.stats-grid` uses CSS Grid with `grid-template-columns: repeat(4, 1fr)` on desktop, `repeat(2, 1fr)` on mobile. Each `.stat-tile` is a white card (use `.dashboard-card` mixin/class), centered text, `.stat-count` in large bold font (~2.5rem), `.stat-label` smaller above it, `.stat-link` smaller below in theme link color.
-- [x] **4.3** Add REST endpoint: `GET dt/v1/dashboard/stats`
-    - Require `access_disciple_tools` capability.
-    - Return: `{ "active_contacts": 12, "update_needed": 9, "contact_attempt_needed": 2, "active_groups": 2 }`.
-    - **Implementation details per stat** (based on the previous `disciple-tools-dashboard` plugin's `rest-api.php`):
-
-    #### Active Contacts
-    The previous plugin used a direct `$wpdb` count query for performance (see `get_active_contacts()` in the old plugin). This is the recommended approach:
-    ```php
-    $active_contacts = $wpdb->get_var( $wpdb->prepare( "
-        SELECT count(a.ID)
-        FROM $wpdb->posts as a
-        INNER JOIN $wpdb->postmeta as assigned_to
-            ON a.ID = assigned_to.post_id
-            AND assigned_to.meta_key = 'assigned_to'
-            AND assigned_to.meta_value = CONCAT( 'user-', %s )
-        JOIN $wpdb->postmeta as b
-            ON a.ID = b.post_id
-            AND b.meta_key = 'overall_status'
-            AND b.meta_value = 'active'
-        WHERE a.post_status = 'publish'
-            AND post_type = 'contacts'
-            AND a.ID NOT IN (
-                SELECT post_id FROM $wpdb->postmeta
-                WHERE meta_key = 'type' AND meta_value = 'user'
-                GROUP BY post_id
-            )
-    ", get_current_user_id() ) );
-    ```
-    Key points: filters to `assigned_to = 'user-{current_user_id}'`, `overall_status = 'active'`, `post_type = 'contacts'`, excludes contacts where `type = 'user'` (user-type contacts are internal D.T records, not real contacts).
-
-    #### Update Needed
-    The previous plugin used `DT_Posts::search_viewable_post()` (now `DT_Posts::list_posts()`):
-    ```php
-    $update_needed = DT_Posts::list_posts( 'contacts', [
-        'requires_update' => [ 'true' ],
-        'assigned_to'     => [ 'me' ],
-        'overall_status'  => [ '-closed' ],
-        'sort'            => 'last_modified',
-        'limit'           => 0,
-    ] );
-    $update_needed_count = $update_needed['total'] ?? 0;
-    ```
-    Alternatively, a direct `$wpdb` count query joining on `meta_key = 'requires_update'` with `meta_value = 'yes'` would be more performant if only the count is needed.
-
-    #### Contact Attempt Needed
-    This stat was not in the previous plugin. Query contacts assigned to the current user where `seeker_path = 'none'` and `overall_status = 'active'`:
-    ```php
-    $contact_attempt_needed = DT_Posts::list_posts( 'contacts', [
-        'seeker_path'    => [ 'none' ],
-        'overall_status' => [ 'active' ],
-        'assigned_to'    => [ 'me' ],
-        'limit'          => 0,
-    ] );
-    $contact_attempt_count = $contact_attempt_needed['total'] ?? 0;
-    ```
-    Or use a direct `$wpdb` count query for better performance:
-    ```php
-    $contact_attempt_count = $wpdb->get_var( $wpdb->prepare( "
-        SELECT count(a.ID)
-        FROM $wpdb->posts as a
-        INNER JOIN $wpdb->postmeta as assigned_to
-            ON a.ID = assigned_to.post_id
-            AND assigned_to.meta_key = 'assigned_to'
-            AND assigned_to.meta_value = CONCAT( 'user-', %s )
-        JOIN $wpdb->postmeta as status
-            ON a.ID = status.post_id
-            AND status.meta_key = 'overall_status'
-            AND status.meta_value = 'active'
-        JOIN $wpdb->postmeta as seeker
-            ON a.ID = seeker.post_id
-            AND seeker.meta_key = 'seeker_path'
-            AND seeker.meta_value = 'none'
-        WHERE a.post_status = 'publish'
-            AND post_type = 'contacts'
-            AND a.ID NOT IN (
-                SELECT post_id FROM $wpdb->postmeta
-                WHERE meta_key = 'type' AND meta_value = 'user'
-                GROUP BY post_id
-            )
-    ", get_current_user_id() ) );
-    ```
-
-    #### Active Groups
-    This stat was not in the previous plugin. Use the same direct query pattern but for groups:
-    ```php
-    $active_groups = $wpdb->get_var( $wpdb->prepare( "
-        SELECT count(a.ID)
-        FROM $wpdb->posts as a
-        INNER JOIN $wpdb->postmeta as assigned_to
-            ON a.ID = assigned_to.post_id
-            AND assigned_to.meta_key = 'assigned_to'
-            AND assigned_to.meta_value = CONCAT( 'user-', %s )
-        JOIN $wpdb->postmeta as status
-            ON a.ID = status.post_id
-            AND status.meta_key = 'group_status'
-            AND status.meta_value = 'active'
-        WHERE a.post_status = 'publish'
-            AND post_type = 'groups'
-    ", get_current_user_id() ) );
-    ```
-    Note: Groups use `group_status` instead of `overall_status`, and the `type != 'user'` exclusion is not needed for groups.
-
-    #### Performance note
-    The previous plugin favored direct `$wpdb` queries over `DT_Posts` API calls for count-only stats. This is recommended here as well — `DT_Posts::list_posts()` with `limit=0` still loads all matching post data which is wasteful when only a count is needed. Direct SQL count queries are significantly faster, especially for users with many contacts. Consider combining multiple counts into a single endpoint call to reduce HTTP overhead (the old plugin's `get_other_stats()` method bundled multiple stats into one response).
-- [x] **4.4** In `dashboard.js`: Fetch stats on page load, populate each `.stat-count` by matching `data-stat` attribute. Show "—" or a spinner while loading.
+- **Metrics:**
+    - **Active Contacts:** Total contacts assigned/sub-assigned to the user with `active` status.
+    - **Update Needed:** Active contacts with the `requires_update` flag set.
+    - **Contact Needed:** Active contacts with no seeker path progress.
+    - **Active Groups:** Total groups assigned to the user with `active` status.
+- **Implementation:**
+    - **Entirely Clickable:** The whole tile is an `<a>` tag for better UX.
+    - **Canonical Deep Links:** Uses `Disciple_Tools_Dashboard::get_list_url()` to generate URLs that match D.T.'s internal filtering logic exactly.
+    - **Link Stability:** Query parameters are encoded to match D.T. canonical formats (`rawurlencode` for Base64 query/labels, `urlencode` for filter names) to prevent history-polluting redirects on the list pages.
+    - **Accuracy:** The `dt/v1/dashboard/stats` endpoint uses `DT_Posts::list_posts()` with the same query parameters as the links, ensuring the count on the tile matches the count on the resulting list page.
 
 ---
 
