@@ -85,80 +85,19 @@ Four high-level summary metrics that provide quick counts and deep links to filt
 
 ---
 
-### Phase 5: Contact Workload Section
+### Contact Workload Section
 
-**Goal:** Let user set their availability status for dispatchers. See the "Contact Workload" section in desktop mockup (right side, next to Your Apps) — three colored toggle buttons and a travel link.
+Allows users to broadcast their availability for new contact assignments to dispatchers.
 
-- [ ] **5.1** Add `#contact-workload` HTML to `template.php`:
-    ```html
-    <section id="contact-workload">
-        <h2>Contact Workload</h2>
-        <p>Choose an option to let the dispatcher(s) know if you are ready for new contacts</p>
-        <div class="workload-options">
-            <button class="workload-btn accepting" data-status="active">
-                <span class="icon">▶</span> Accepting new contacts
-            </button>
-            <button class="workload-btn investing" data-status="existing">
-                <span class="icon">❚❚</span> I'm only investing in existing contacts
-            </button>
-            <button class="workload-btn too-many" data-status="too_many">
-                <span class="icon">■</span> I have too many contacts
-            </button>
-        </div>
-        <a href="#" class="travel-link">🧳 Set travel or dates unavailable</a>
-    </section>
-    ```
-- [ ] **5.2** Styles in `_dashboard.scss`: `.workload-options` is a flex row. Each `.workload-btn` has a distinct left-border or background color: green for accepting (`--success-color`), orange for investing (`--warning-color`), red for too-many (`--alert-color`). The currently active option should be visually highlighted (e.g., filled background, others outlined). On mobile, stack buttons vertically.
-- [ ] **5.3** Add REST endpoints: `GET dt/v1/dashboard/workload-status` (returns current user's workload status) and `PUT dt/v1/dashboard/workload-status` (updates it).
-    - Require `access_disciple_tools` capability.
-    - **Implementation details** (based on the previous `disciple-tools-dashboard` plugin's `rest-api.php`):
-
-    #### How workload status is stored
-    The previous plugin stored the workload status as a **WordPress user option** via `update_user_option()`. The relevant code from the old plugin's `update_user()` method (`POST /user` endpoint):
-    ```php
-    public function update_user( WP_REST_Request $request ) {
-        $body = $request->get_json_params();
-        $user = wp_get_current_user();
-        if ( !empty( $body['workload_status'] ) ) {
-            update_user_option( $user->ID, 'workload_status', $body['workload_status'] );
-        }
-        return true;
-    }
-    ```
-    Key points:
-    - Uses `update_user_option()` / `get_user_option()` (stores in `wp_usermeta` with a blog-prefix key), **not** `dt_user_meta`.
-    - The status values are strings: `'active'` (accepting), `'existing'` (investing in existing only), `'too_many'` (too many contacts).
-    - The old plugin combined this into a generic `POST /user` endpoint. For our implementation, dedicated `GET` and `PUT` endpoints are cleaner.
-
-    #### GET endpoint (read current status)
-    ```php
-    public static function get_workload_status( $request ) {
-        $user_id = get_current_user_id();
-        $status = get_user_option( 'workload_status', $user_id );
-        return [
-            'workload_status' => $status ?: 'active', // default to 'active' if not set
-        ];
-    }
-    ```
-
-    #### PUT endpoint (update status)
-    ```php
-    public static function update_workload_status( $request ) {
-        $body = $request->get_json_params();
-        $user_id = get_current_user_id();
-        $allowed = [ 'active', 'existing', 'too_many' ];
-        if ( empty( $body['workload_status'] ) || !in_array( $body['workload_status'], $allowed, true ) ) {
-            return new WP_Error( 'invalid_status', 'Invalid workload status.', [ 'status' => 400 ] );
-        }
-        update_user_option( $user_id, 'workload_status', sanitize_text_field( $body['workload_status'] ) );
-        return [ 'workload_status' => $body['workload_status'] ];
-    }
-    ```
-
-    #### Performance note
-    Reading/writing a single user option is already very fast (single row lookup in `wp_usermeta`). No optimization needed beyond standard WordPress caching, which `get_user_option()` benefits from automatically. The old plugin's approach of using `update_user_option()` is the correct and most performant way to store per-user settings like this — avoid using `DT_Posts` or custom tables for simple user preferences.
-- [ ] **5.4** In `dashboard.js`: On load, fetch current status and highlight the matching button. On button click, PUT the new status and update UI. Add a `.selected` class to the active button.
-- [ ] **5.5** Layout: On desktop, this section sits to the right of "Your Apps" (they share a row). On mobile, it stacks below "Your Apps".
+- **Implementation:**
+    - **Server-Side Load:** The initial `workload_status` is retrieved via `get_user_option()` in `template.php`, ensuring the correct button is highlighted instantly on page load.
+    - **Persistence:** Status is stored as a standard WordPress user option (`workload_status`).
+    - **REST API:** A `PUT` endpoint at `dt/v1/dashboard/workload-status` handles seamless updates from the UI.
+- **UI & Responsiveness:**
+    - **Mobile:** Buttons are displayed 3-across horizontally with icons on top and compact labels.
+    - **Desktop (≥1024px):** Layout shifts to "icon-left, label-right" with larger font sizes and 2-line label wrapping.
+    - **Visual Feedback:** Buttons use theme-standard success (green), warning (orange), and alert (red) colors for their respective states.
+- **Deep Link:** Includes a direct link to the user's availability settings page.
 
 ---
 

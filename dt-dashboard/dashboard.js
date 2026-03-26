@@ -79,16 +79,60 @@ global makeRequestOnPosts
     }
   };
 
+  const updateWorkloadStatus = async (status) => {
+    const workloadSection = document.getElementById('contact-workload');
+    if (!workloadSection) return;
+
+    const buttons = workloadSection.querySelectorAll('.workload-btn');
+    const targetBtn = Array.from(buttons).find(
+      (btn) => btn.dataset.status === status,
+    );
+
+    if (!targetBtn || targetBtn.classList.contains('selected')) return;
+
+    try {
+      const response = await fetch(
+        `${dtDashboard.rest_url_base}dt/v1/dashboard/workload-status`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-WP-Nonce': dtDashboard.nonce,
+          },
+          body: JSON.stringify({ workload_status: status }),
+        },
+      );
+
+      if (!response.ok) throw new Error('Failed to update workload status');
+
+      buttons.forEach((btn) => btn.classList.remove('selected'));
+      targetBtn.classList.add('selected');
+    } catch (error) {
+      console.error('Error updating workload status:', error);
+      alert('Could not update workload status. Please try again.');
+    }
+  };
+
   document.addEventListener('DOMContentLoaded', () => {
     fetchStats();
-    const pendingContactsSection = document.getElementById('pending-contacts');
 
+    const pendingContactsSection = document.getElementById('pending-contacts');
     if (pendingContactsSection) {
       pendingContactsSection.addEventListener('click', (event) => {
         const target = event.target;
         const contactId = target.dataset.contactId;
         const action = target.dataset.action;
         handleContactAction(contactId, action);
+      });
+    }
+
+    const workloadSection = document.getElementById('contact-workload');
+    if (workloadSection) {
+      workloadSection.addEventListener('click', (event) => {
+        const btn = event.target.closest('.workload-btn');
+        if (btn && btn.dataset.status) {
+          updateWorkloadStatus(btn.dataset.status);
+        }
       });
     }
   });

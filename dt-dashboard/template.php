@@ -118,7 +118,28 @@ get_header(); ?>
             </section>
 
             <!-- Phase 5: Contact Workload -->
-            <div id="contact-workload" class="dashboard-card"></div>
+            <?php $workload_status = get_user_option( 'workload_status', get_current_user_id() ) ?: 'active'; ?>
+            <section id="contact-workload">
+                <h2><?php esc_html_e( 'Contact Workload', 'disciple_tools' ) ?></h2>
+                <p><?php esc_html_e( 'Choose an option to let the dispatcher(s) know if you are ready for new contacts', 'disciple_tools' ) ?></p>
+                <div class="workload-options">
+                    <button class="workload-btn accepting <?php echo $workload_status === 'active' ? 'selected' : '' ?>" data-status="active">
+                        <span class="workload-btn--icon mdi mdi-play"></span>
+                        <span class="workload-btn--label"><?php esc_html_e( 'Accepting new contacts', 'disciple_tools' ) ?></span>
+                    </button>
+                    <button class="workload-btn investing <?php echo $workload_status === 'existing' ? 'selected' : '' ?>" data-status="existing">
+                        <span class="workload-btn--icon mdi mdi-pause"></span>
+                        <span class="workload-btn--label"><?php esc_html_e( 'I\'m only investing in existing contacts', 'disciple_tools' ) ?></span>
+                    </button>
+                    <button class="workload-btn too-many <?php echo $workload_status === 'too_many' ? 'selected' : '' ?>" data-status="too_many">
+                        <span class="workload-btn--icon mdi mdi-stop"></span>
+                        <span class="workload-btn--label"><?php esc_html_e( 'I have too many contacts', 'disciple_tools' ) ?></span>
+                    </button>
+                </div>
+                <a href="<?php echo esc_url( site_url( '/settings/#availability' ) ); ?>" class="travel-link">
+                    <span class="icon mdi mdi-briefcase-outline"></span> <?php esc_html_e( 'Set travel or dates unavailable', 'disciple_tools' ) ?>
+                </a>
+            </section>
 
             <!-- Phase 4: Stats Tiles -->
             <a class="stat-tile" data-stat="active_contacts" href="<?php echo esc_url( $active_contacts_url ); ?>">

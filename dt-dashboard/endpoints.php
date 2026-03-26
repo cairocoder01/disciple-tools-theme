@@ -25,6 +25,30 @@ class Disciple_Tools_Dashboard_Endpoints {
             'callback' => [ $this, 'get_stats' ],
             'permission_callback' => [ $this, 'permissions_check' ],
         ] );
+
+        register_rest_route( 'dt/v1', '/dashboard/workload-status', [
+            [
+                'methods'  => 'PUT',
+                'callback' => [ $this, 'update_workload_status' ],
+                'permission_callback' => [ $this, 'permissions_check' ],
+            ]
+        ] );
+    }
+
+    public function update_workload_status( WP_REST_Request $request ) {
+        $body    = $request->get_json_params();
+        $user_id = get_current_user_id();
+        $allowed = [ 'active', 'existing', 'too_many' ];
+
+        if ( empty( $body['workload_status'] ) || ! in_array( $body['workload_status'], $allowed, true ) ) {
+            return new WP_Error( 'invalid_status', 'Invalid workload status.', [ 'status' => 400 ] );
+        }
+
+        update_user_option( $user_id, 'workload_status', sanitize_text_field( $body['workload_status'] ) );
+
+        return [
+            'workload_status' => $body['workload_status'],
+        ];
     }
 
     public function permissions_check() {

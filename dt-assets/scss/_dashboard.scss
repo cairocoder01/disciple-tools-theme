@@ -313,6 +313,114 @@
 
         #contact-workload {
             order: 1; // at the end for mobile
+            display: flex;
+            flex-direction: column;
+            padding: 0; // Remove card padding since we removed .dashboard-card
+
+            h2 {
+                margin: 0;
+                font-size: 1.25rem;
+            }
+
+            p {
+                margin: 0.5rem 0 1rem;
+                font-size: 0.85rem;
+                color: var(--text-color-light);
+            }
+
+            .workload-options {
+                display: flex;
+                flex-direction: row; // 3 across horizontally even on mobile
+                gap: 0;
+                margin-bottom: 1rem;
+
+                .workload-btn {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column; // Icon top, text below on mobile
+                    align-items: center;
+                    justify-content: flex-start;
+                    padding: 0.5rem 0.25rem;
+                    background: var(--surface-1);
+                    border: 1px solid var(--border-color);
+                    border-radius: 0;
+                    font-size: 0.65rem;
+                    font-weight: 500;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    text-align: center;
+                    color: var(--text-color);
+                    gap: 0.25rem;
+                    min-height: 80px;
+
+                    &:first-child { border-radius: 8px 0 0 8px; }
+                    &:last-child { border-radius: 0 8px 8px 0; }
+                    &:not(:first-child) { border-left: none; }
+
+                    .workload-btn--icon {
+                        font-size: 1.8rem;
+                        line-height: 1;
+                    }
+
+                    .workload-btn--label {
+                        line-height: 1.2;
+                        display: block;
+                        white-space: normal;
+                    }
+
+                    &.accepting .workload-btn--icon { color: var(--success-color); }
+                    &.investing .workload-btn--icon { color: var(--warning-color); }
+                    &.too-many .workload-btn--icon { color: var(--alert-color); }
+
+                    &.selected {
+                        border-color: transparent;
+                        color: var(--text-color-inverse);
+
+                        &.accepting { background: var(--success-color); }
+                        &.investing { background: var(--warning-color); }
+                        &.too-many { background: var(--alert-color); }
+
+                        .workload-btn--icon { color: inherit; }
+                    }
+
+                    &:hover:not(.selected) {
+                        background: var(--surface-2);
+                    }
+
+                    // Desktop layout: icon left, text right
+                    @media (min-width: 1024px) {
+                        flex-direction: row;
+                        text-align: left;
+                        padding: 0.75rem 1rem;
+                        font-size: 0.85rem;
+                        gap: 0.75rem;
+
+                        .workload-btn--icon {
+                            font-size: 2.2rem;
+                        }
+
+                        .workload-btn--label {
+                            font-size: 1rem;
+                            display: -webkit-box;
+                            overflow: hidden;
+                        }
+                    }
+                }
+            }
+
+            .travel-link {
+                margin-top: auto;
+                font-size: 0.85rem;
+                color: var(--text-color);
+                text-decoration: none;
+                display: inline-flex;
+                align-items: center;
+                gap: 0.25rem;
+
+                &:hover {
+                    text-decoration: underline;
+                }
+            }
         }
 
         // Mobile-medium layout
