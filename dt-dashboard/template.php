@@ -15,6 +15,56 @@ $to_accept = DT_Posts::search_viewable_post( 'contacts', [
     'type'           => [ 'access' ]
 ] );
 
+// Phase 4: Stat Tile URLs
+$active_contacts_url = Disciple_Tools_Dashboard::get_list_url( 'contacts', [
+    'assigned_to' => [ 'me' ],
+    'subassigned' => [ 'me' ],
+    'combine' => [ 'subassigned' ],
+    'type' => [ 'access' ],
+    'overall_status' => [ 'active' ],
+    'sort' => 'seeker_path'
+    ], [
+    [ 'name' => __( 'Active', 'disciple_tools' ) ],
+    [ 'name' => __( 'Assigned to me', 'disciple_tools' ), 'field' => 'assigned_to', 'id' => 'me' ],
+    [ 'name' => __( 'Sub-assigned to me', 'disciple_tools' ), 'field' => 'subassigned', 'id' => 'me' ],
+], 'my_active', 'default', __( 'Active', 'disciple_tools' ) );
+
+$update_needed_url = Disciple_Tools_Dashboard::get_list_url( 'contacts', [
+    'assigned_to' => [ 'me' ],
+    'subassigned' => [ 'me' ],
+    'combine' => [ 'subassigned' ],
+    'overall_status' => [ 'active' ],
+    'requires_update' => [ true ],
+    'type' => [ 'access' ],
+    'sort' => 'seeker_path'
+    ], [
+    [ 'name' => __( 'Requires Update', 'disciple_tools' ) ],
+    [ 'name' => __( 'Assigned to me', 'disciple_tools' ), 'field' => 'assigned_to', 'id' => 'me' ],
+    [ 'name' => __( 'Sub-assigned to me', 'disciple_tools' ), 'field' => 'subassigned', 'id' => 'me' ],
+], 'my_update_needed', 'default', __( 'Requires Update', 'disciple_tools' ) );
+
+$contact_attempt_needed_url = Disciple_Tools_Dashboard::get_list_url( 'contacts', [
+    'assigned_to' => [ 'me' ],
+    'subassigned' => [ 'me' ],
+    'combine' => [ 'subassigned' ],
+    'overall_status' => [ 'active' ],
+    'seeker_path' => [ 'none' ],
+    'type' => [ 'access' ],
+    'sort' => 'name'
+    ], [
+    [ 'name' => __( 'Contact Attempt Needed', 'disciple_tools' ) ],
+    [ 'name' => __( 'Assigned to me', 'disciple_tools' ), 'field' => 'assigned_to', 'id' => 'me' ],
+    [ 'name' => __( 'Sub-assigned to me', 'disciple_tools' ), 'field' => 'subassigned', 'id' => 'me' ],
+], 'my_none', 'default', __( 'Contact Attempt Needed', 'disciple_tools' ) );
+
+$active_groups_url = Disciple_Tools_Dashboard::get_list_url( 'groups', [
+    'assigned_to' => [ 'me' ],
+    'group_status' => [ 'active' ],
+    'sort' => '-post_date',
+    ], [
+    [ 'id' => 'my_active', 'name' => __( 'Active', 'disciple_tools' ) ]
+], 'my_active', 'assigned_to_me', __( 'Active', 'disciple_tools' ) );
+
 get_header(); ?>
 
     <div class="template-dashboard">
@@ -71,7 +121,26 @@ get_header(); ?>
             <div id="contact-workload" class="dashboard-card"></div>
 
             <!-- Phase 4: Stats Tiles -->
-            <div id="stats-tiles"></div>
+            <a class="stat-tile" data-stat="active_contacts" href="<?php echo esc_url( $active_contacts_url ); ?>">
+                <span class="stat-label"><?php esc_html_e( 'Active Contacts', 'disciple_tools' ) ?></span>
+                <span class="stat-count">—</span>
+                <span class="stat-link"><?php esc_html_e( 'See all >', 'disciple_tools' ) ?></span>
+            </a>
+            <a class="stat-tile" data-stat="update_needed" href="<?php echo esc_url( $update_needed_url ); ?>">
+                <span class="stat-label"><?php esc_html_e( 'Requires Update', 'disciple_tools' ) ?></span>
+                <span class="stat-count">—</span>
+                <span class="stat-link"><?php esc_html_e( 'See all >', 'disciple_tools' ) ?></span>
+            </a>
+            <a class="stat-tile" data-stat="contact_attempt_needed" href="<?php echo esc_url( $contact_attempt_needed_url ); ?>">
+                <span class="stat-label"><?php esc_html_e( 'Contact Needed', 'disciple_tools' ) ?></span>
+                <span class="stat-count">—</span>
+                <span class="stat-link"><?php esc_html_e( 'See all >', 'disciple_tools' ) ?></span>
+            </a>
+            <a class="stat-tile" data-stat="active_groups" href="<?php echo esc_url( $active_groups_url ); ?>">
+                <span class="stat-label"><?php esc_html_e( 'Active Groups', 'disciple_tools' ) ?></span>
+                <span class="stat-count">—</span>
+                <span class="stat-link"><?php esc_html_e( 'See all >', 'disciple_tools' ) ?></span>
+            </a>
 
             <!-- Phase 6: Contacts (Recently Updated) -->
             <div id="recent-contacts" class="dashboard-card post-list"></div>

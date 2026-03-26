@@ -317,14 +317,34 @@ All sections described below should match these mockups as closely as possible. 
 
 **Goal:** Four summary count tiles in a row, each showing a metric name, large number, and "See all >" link. See both mockups — the row of 4 white cards below the apps section.
 
-| Tile | Description | "See all" Link |
-|------|-------------|---------------|
-| Active Contacts | Count of user's contacts with `overall_status` = `active` | `/contacts?status=active` |
-| Update Needed | Contacts with `requires_update` = `true` | `/contacts?requires_update=true` |
-| Contact Attempt Needed | Contacts with `seeker_path` = `none` and status `assigned` | `/contacts?seeker_path=none` |
-| Active Groups | Count of user's groups with `group_status` = `active` | `/groups?status=active` |
+| Tile | Description | "See all" Link (Refined) |
+|------|-------------|-------------------------|
+| Active Contacts | Count of user's contacts with `overall_status` = `active` | `/contacts?filter_id=my_active&query=...&labels=...` |
+| Update Needed | Contacts with `requires_update` = `true` | `/contacts?filter_id=my_update_needed&query=...&labels=...` |
+| Contact Attempt Needed | Contacts with `seeker_path` = `none` and status `active` | `/contacts?filter_id=my_none&query=...&labels=...` |
+| Active Groups | Count of user's groups with `group_status` = `active` | `/groups?filter_id=my_active&query=...&labels=...` |
 
-- [ ] **4.1** Add `#stats-tiles` HTML to `template.php`:
+> **Note on Deep Linking:** D.T list pages use base64-encoded JSON for `query` and `labels` parameters. To ensure the link correctly applies the filter and shows the right labels in the UI, use the `Disciple_Tools_Dashboard::get_list_url()` helper (see implementation in `dashboard.php`).
+
+#### Deep Link Query/Label Structures
+
+**Active Contacts**
+- **Query:** `{"assigned_to":["me"],"subassigned":["me"],"combine":["subassigned"],"type":["access"],"overall_status":["active"],"sort":"seeker_path"}`
+- **Labels:** `[{"name":"Active"},{"name":"Assigned to me","field":"assigned_to","id":"me"},{"name":"Sub-assigned to me","field":"subassigned","id":"me"}]`
+
+**Update Needed**
+- **Query:** `{"assigned_to":["me"],"subassigned":["me"],"combine":["subassigned"],"overall_status":["active"],"requires_update":[true],"type":["access"],"sort":"seeker_path"}`
+- **Labels:** `[{"name":"Update Needed"},{"name":"Assigned to me","field":"assigned_to","id":"me"},{"name":"Sub-assigned to me","field":"subassigned","id":"me"}]`
+
+**Contact Attempt Needed**
+- **Query:** `{"assigned_to":["me"],"subassigned":["me"],"combine":["subassigned"],"overall_status":["active"],"seeker_path":["none"],"type":["access"],"sort":"name"}`
+- **Labels:** `[{"name":"Contact Attempt Needed"},{"name":"Assigned to me","field":"assigned_to","id":"me"},{"name":"Sub-assigned to me","field":"subassigned","id":"me"}]`
+
+**Active Groups**
+- **Query:** `{"assigned_to":["me"],"group_status":["active"]}`
+- **Labels:** `[{"name":"Active"}]`
+
+- [x] **4.1** Add `#stats-tiles` HTML to `template.php`:
     ```html
     <section id="stats-tiles">
         <div class="stats-grid">
@@ -337,8 +357,8 @@ All sections described below should match these mockups as closely as possible. 
         </div>
     </section>
     ```
-- [ ] **4.2** Add styles to `_dashboard.scss`: `.stats-grid` uses CSS Grid with `grid-template-columns: repeat(4, 1fr)` on desktop, `repeat(2, 1fr)` on mobile. Each `.stat-tile` is a white card (use `.dashboard-card` mixin/class), centered text, `.stat-count` in large bold font (~2.5rem), `.stat-label` smaller above it, `.stat-link` smaller below in theme link color.
-- [ ] **4.3** Add REST endpoint: `GET dt/v1/dashboard/stats`
+- [x] **4.2** Add styles to `_dashboard.scss`: `.stats-grid` uses CSS Grid with `grid-template-columns: repeat(4, 1fr)` on desktop, `repeat(2, 1fr)` on mobile. Each `.stat-tile` is a white card (use `.dashboard-card` mixin/class), centered text, `.stat-count` in large bold font (~2.5rem), `.stat-label` smaller above it, `.stat-link` smaller below in theme link color.
+- [x] **4.3** Add REST endpoint: `GET dt/v1/dashboard/stats`
     - Require `access_disciple_tools` capability.
     - Return: `{ "active_contacts": 12, "update_needed": 9, "contact_attempt_needed": 2, "active_groups": 2 }`.
     - **Implementation details per stat** (based on the previous `disciple-tools-dashboard` plugin's `rest-api.php`):
@@ -442,7 +462,7 @@ All sections described below should match these mockups as closely as possible. 
 
     #### Performance note
     The previous plugin favored direct `$wpdb` queries over `DT_Posts` API calls for count-only stats. This is recommended here as well — `DT_Posts::list_posts()` with `limit=0` still loads all matching post data which is wasteful when only a count is needed. Direct SQL count queries are significantly faster, especially for users with many contacts. Consider combining multiple counts into a single endpoint call to reduce HTTP overhead (the old plugin's `get_other_stats()` method bundled multiple stats into one response).
-- [ ] **4.4** In `dashboard.js`: Fetch stats on page load, populate each `.stat-count` by matching `data-stat` attribute. Show "—" or a spinner while loading.
+- [x] **4.4** In `dashboard.js`: Fetch stats on page load, populate each `.stat-count` by matching `data-stat` attribute. Show "—" or a spinner while loading.
 
 ---
 

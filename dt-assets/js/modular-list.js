@@ -500,7 +500,9 @@
     url.searchParams.set('filter_tab', currentFilter.tab || '');
     url.searchParams.set('filter_name', currentFilter.name || '');
 
-    window.history.pushState(null, document.title, url.search);
+    if (url.search !== window.location.search) {
+      window.history.pushState(null, document.title, url.search);
+    }
   }
 
   function get_records_for_current_filter(

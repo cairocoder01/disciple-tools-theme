@@ -45,7 +45,42 @@ global makeRequestOnPosts
     }
   };
 
+  const fetchStats = async () => {
+    const dashboardGrid = document.getElementById('dashboard-grid');
+    if (!dashboardGrid) return;
+
+    try {
+      const response = await fetch(
+        `${dtDashboard.rest_url_base}dt/v1/dashboard/stats`,
+        {
+          headers: {
+            'X-WP-Nonce': dtDashboard.nonce,
+          },
+        },
+      );
+
+      if (!response.ok) throw new Error('Failed to fetch stats');
+
+      const stats = await response.json();
+
+      Object.entries(stats).forEach(([key, value]) => {
+        const tile = dashboardGrid.querySelector(
+          `.stat-tile[data-stat="${key}"]`,
+        );
+        if (tile) {
+          const countDisplay = tile.querySelector('.stat-count');
+          if (countDisplay) {
+            countDisplay.textContent = value;
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error);
+    }
+  };
+
   document.addEventListener('DOMContentLoaded', () => {
+    fetchStats();
     const pendingContactsSection = document.getElementById('pending-contacts');
 
     if (pendingContactsSection) {

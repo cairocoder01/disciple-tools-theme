@@ -132,13 +132,15 @@
     }
 
     #dashboard-grid {
-        // Mobile-first: single column layout by default
+        // Mobile-first: 4 columns to support 4-across stats
         display: grid;
-        gap: 1.5rem;
-        padding: 1.5rem;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        padding: 1rem;
 
         > * {
-            min-width: 0; // Prevent content from expanding the grid column
+            grid-column: span 2; // Default to full width
+            min-width: 0;
         }
 
         // Shared card style
@@ -149,19 +151,71 @@
             padding: 1.5rem;
         }
 
+        // Phase 4: Stats Tiles
+        .stat-tile {
+            @extend .dashboard-card;
+            grid-column: span 1; // 4 across on mobile/tablet
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 5px 1rem;
+            justify-content: center;
+            border-radius: 12px; // Bigger corner radius
+            text-decoration: none;
+            color: inherit;
+            transition: all 0.2s ease-in-out;
+
+            &:hover {
+                box-shadow: var(--shadow-1);
+                transform: translateY(-2px);
+
+                .stat-link {
+                    text-decoration: underline;
+                    color: var(--primary-color);
+                }
+            }
+
+            .stat-label {
+                font-size: 0.75rem;
+                color: var(--text-color);
+                font-weight: 400;
+            }
+
+            .stat-count {
+                font-size: 2.2rem;
+                font-weight: 700;
+                color: var(--text-color);
+                line-height: 1.1;
+            }
+
+            .stat-link {
+                font-size: 0.7rem;
+                color: var(--text-color-light);
+                text-decoration: none;
+                font-weight: 100;
+                white-space: nowrap;
+            }
+
+            // Tablet+Desktop layout
+            @media (min-width: 768px) {
+                .stat-label {
+                    font-size: 0.9rem;
+                }
+            }
+        }
+
         // Phase 3: Your Apps
         #your-apps {
             h2 {
-                margin: 0 0 0.75rem;
+                margin: 0;
                 font-size: 1.25rem;
-                font-weight: 600;
                 display: flex;
                 align-items: center;
-                gap: 0.5rem;
+                gap: 0.25rem;
 
                 .section-icon {
                     font-size: 1.4rem;
-                    color: var(--primary-color, #3f729b);
                 }
             }
 
@@ -257,17 +311,27 @@
             }
         }
 
+        #contact-workload {
+            order: 1; // at the end for mobile
+        }
+
+        // Mobile-medium layout
+        @media (min-width: 360px) {
+            grid-template-columns: repeat(4, 1fr);
+            > * {
+                grid-column: span 4; // Everything full width
+            }
+        }
+
         // Tablet layout
         @media (min-width: 768px) {
-            grid-template-columns: 1fr 1fr;
-
+            gap: 1.5rem;
+            padding: 1.5rem;
             #your-apps, #contact-workload {
-                grid-column: span 1;
+                grid-column: span 2; // Half width
             }
-
-            .dashboard-card,
-            #stats-tiles {
-                grid-column: span 2;
+            #contact-workload {
+                order: 0; // back in normal flow
             }
         }
 
@@ -275,12 +339,16 @@
         @media (min-width: 1024px) {
             grid-template-columns: repeat(12, 1fr);
 
-            #your-apps, #contact-workload {
-                grid-column: span 6;
+            > * {
+                grid-column: span 12;
             }
 
-            #stats-tiles {
-                grid-column: span 12;
+            .stat-tile {
+                grid-column: span 3; // 4 across
+            }
+
+            #your-apps, #contact-workload {
+                grid-column: span 6;
             }
 
             .post-list {
