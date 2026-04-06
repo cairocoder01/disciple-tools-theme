@@ -34,12 +34,12 @@ All sections described below should match these mockups as closely as possible. 
 
 The dashboard is built on a responsive grid system defined in `_dashboard.scss` and `template.php`.
 
-- **Responsive Grid:** 
+- **Responsive Grid:**
     - **Desktop (≥1024px):** Uses a 12-column CSS Grid. Layout areas are defined by span counts (e.g., stats tiles span 3 columns each for a 4-across row).
     - **Tablet (768px–1023px):** Shifts to a 4-column or 2-column layout depending on the section complexity.
     - **Mobile (<768px):** Single-column stacked layout.
 - **Card UI:** A shared `.dashboard-card` class provides the consistent white background, rounded corners (8px), and subtle shadows used across most sections.
-- **Assets:** 
+- **Assets:**
     - `dashboard.js` handles client-side interactions (Accept/Decline, fetching dynamic stats).
     - `endpoints.php` provides the `dt/v1/dashboard/` REST API namespace.
 
@@ -50,7 +50,7 @@ The dashboard is built on a responsive grid system defined in `_dashboard.scss` 
 A full-width highlight banner at the top of the dashboard for contacts requiring immediate action.
 
 - **Visuals:** Orange background with a large semi-transparent icon. Horizontal scrolling list of cards.
-- **Implementation:** 
+- **Implementation:**
     - PHP renders the initial list using `DT_Posts::search_viewable_post` for performance on first load.
     - `dashboard.js` handles the "Accept" and "Decline" actions via the `dt/v1/contacts/{id}/accept` endpoint.
     - Successfully accepted/declined cards are removed with a fade-out animation.
@@ -101,71 +101,254 @@ Allows users to broadcast their availability for new contact assignments to disp
 
 ---
 
-### Phase 6: Contacts (Recently Updated) Table
+### Phase 6: Shared Post List Component (Backend + Frontend)
 
-**Goal:** Table/list of recently updated contacts with status badges and a filter dropdown. See the "Contacts (Recently Updated)" section in both mockups — table with Name, Status badge, Last Updated columns, and a ⋮ menu.
+**Goal:** Build a reusable, post-type-agnostic post list component used by both the Contacts and Groups cards (and extensible to future record types). This phase creates all shared infrastructure; Phase 7 instantiates it for contacts and groups.
 
-- [ ] **6.1** Add `#recent-contacts` HTML to `template.php`:
+#### 6A — Shared REST Endpoint
+
+- [ ] **6A.1** Add a single generic endpoint in `endpoints.php`: `GET dt/v1/dashboard/posts?post_type={type}&filter={filter}&limit={n}`
+    - Accept parameters:
+        - `post_type` (required) — e.g., `contacts`, `groups`, or any registered D.T post type.
+        - `filter` (optional) — one of `recently_updated`, `favorites`, `update_needed`, `active`. Defaults to smart resolution (see 6A.3).
+        - `limit` (optional, default 10).
+        - `fields` (optional) — comma-separated list of fields to return (e.g., `name,overall_status,last_modified`). Defaults to a sensible set per post type.
+    - Validate `post_type` against registered D.T post types (`DT_Posts::get_post_types()`).
+    - Build `DT_Posts::list_posts()` args dynamically:
+        - `recently_updated`: `sort=-last_modified`.
+        - `favorites`: `favorited=true`.
+        - `update_needed`: `requires_update=true`, assigned to me, active status.
+        - `active`: status field = `active` (use the post type's status field — `overall_status` for contacts, `group_status` for groups, etc., looked up from field settings).
+    - Return shape: `{ posts: [{ id, name, status: { key, label, color }, last_modified, permalink, ...requested_fields }], total, filter_applied }`.
+
+- [ ] **6A.2** Add a helper method `get_status_field_key( $post_type )` that looks up which field represents the "status" for a given post type from its field settings. This avoids hardcoding `overall_status` vs `group_status`.
+
+- [ ] **6A.3** Add a companion endpoint (or extend the above): `GET dt/v1/dashboard/posts-filters?post_type={type}`
+    - Returns the **smart default filter** for the current user and post type, determined by this priority:
+        1. **User saved preference** — if the user has explicitly saved/pinned a view for this post type (see 6D), use that.
+        2. **Updates Needed** — if `update_needed` count > 0, return `update_needed`.
+        3. **Favorites** — if the user has any favorited records of this post type, return `favorites`.
+        4. **Active** — fallback.
+    - Return shape: `{ default_filter, counts: { recently_updated, favorites, update_needed, active } }`.
+    - The counts are used by the frontend to show indicators (e.g., badge on "Update Needed" menu item) and to drive the smart default without extra round-trips.
+
+#### 6B — Shared Frontend Component (`PostListCard`)
+
+- [ ] **6B.1** In `dashboard.js`, create a reusable `PostListCard` class/factory function:
+    ```js
+    class PostListCard {
+      constructor({ container, postType, label, labelSingular, listPageUrl, newUrl, fields, limit })
+      async init()           // fetch default filter, then load records
+      async loadRecords(filter)
+      renderRows(posts)
+      renderEmptyState(filter)
+      updateSubtitle(filter)
+      toggleMenu()
+      setFilter(filter)
+      getSeeAllUrl(filter)   // returns list page URL with the active filter's query params
+    }
+    ```
+    - `fields` is an array of field config objects: `{ key, label, render(value, post) }` — this allows each instantiation to define which columns appear and how they display (e.g., contacts might show `overall_status` as a colored badge, groups might show `member_count` as a number).
+    - `limit` controls how many records to show (default 5).
+
+- [ ] **6B.2** **Smart default on init:**
+    - On `init()`, first call the `posts-filters` endpoint to get the smart default filter.
+    - Then call `loadRecords(defaultFilter)` to populate the list.
+    - Update the subtitle and menu checkmark accordingly.
+
+- [ ] **6B.3** **Filter menu** (⋮ button in top-right):
+    - Menu items: Recently Updated, Favorites, Update Needed, Active.
+    - Each item shows a checkmark (✓) if it's the active filter.
+    - Each item can optionally show a count badge (from the counts returned by `posts-filters`).
+    - Selecting a filter calls `setFilter(filter)`, which:
+        1. Updates the active checkmark.
+        2. Calls `loadRecords(filter)`.
+        3. Updates the card subtitle.
+        4. Updates the "See all" link URL to include the appropriate filter params.
+
+- [ ] **6B.4** **Card subtitle:**
+    - Below the card title (e.g., "Contacts"), display a dynamic subtitle that describes the current view.
+    - Examples: "Recently Updated", "⭐ Favorites", "⚠ Update Needed", "Active".
+    - The subtitle updates on every filter change.
+
+- [ ] **6B.5** **Empty state:**
+    - When the API returns 0 records for the active filter, display a friendly message:
+        - Text: "No {post_type_label} found for {filter_label}." (e.g., "No contacts found for Update Needed.")
+        - Include a link: "Add a new {post_type_label_singular}" pointing to the new-record URL for that post type (e.g., `/contacts/new`).
+    - Style the empty state with a subtle icon or illustration, centered in the card.
+
+- [ ] **6B.6** **"See all" link:**
+    - Always visible in the section header, regardless of whether records are shown.
+    - Links to the list page for the post type with query parameters matching the active filter.
+    - Uses `Disciple_Tools_Dashboard::get_list_url()` pattern to generate canonical D.T filter URLs.
+    - Example: if filter is `update_needed` on contacts, links to `/contacts?filter=requires_update` (or the appropriate D.T query format).
+
+- [ ] **6B.7** **Loading state:**
+    - Show a skeleton/spinner inside the card body during data fetch.
+    - On filter change, show a brief loading indicator while new data loads.
+
+#### 6C — Shared Styles
+
+- [ ] **6C.1** In `_dashboard.scss`, create shared classes scoped under `.post-list-card`:
+    - `.post-list-header`: flex row — title (h2), subtitle, spacer, "See all" link, ⋮ menu button.
+    - `.post-list-subtitle`: smaller text below the title, color `var(--secondary-text-color)`.
+    - `.post-list-menu`: absolute-positioned dropdown with filter items, checkmarks, and optional count badges.
+    - `.post-list-table .table-header`: grid row for column headers (gray text, smaller font).
+    - `.post-list-table .table-row`: grid row with bottom border, hover highlight, cursor pointer. Avatar circle, name, status badge, date, and any additional configured fields.
+    - `.status-badge`: colored pill using D.T's existing status color definitions.
+    - `.post-list-empty`: centered message with subtle styling and "add new" link.
+    - `.post-list-loading`: skeleton/spinner styles.
+    - On mobile: hide table header, show each record as a compact card row (name + status on one line, date below).
+    - The column grid template should be configurable via a CSS custom property or data attribute to accommodate different field counts per post type.
+
+- [ ] **6C.2** No post-type-specific styles needed — all visual differences come from the field configuration passed to `PostListCard`.
+
+#### 6D — User View Preference (Saved Filter)
+
+**Goal:** Allow users to "pin" a preferred view for each post list, overriding the smart default logic. Also provide an easy way to revert to automatic defaults.
+
+- [ ] **6D.1** Add REST endpoints for view preferences:
+    - `PUT dt/v1/dashboard/post-list-preference` — body: `{ post_type, filter }`. Stores the user's preferred filter as a user option (e.g., `dt_dashboard_post_list_{post_type}_filter`).
+    - `DELETE dt/v1/dashboard/post-list-preference?post_type={type}` — removes the saved preference, reverting to smart defaults.
+
+- [ ] **6D.2** **UI options for saving/reverting**:
+
+    **Option A — "Pin this view" in the filter menu (Recommended):**
+    - Add a divider and a "Pin this view" / "Unpin" toggle at the bottom of the filter dropdown menu.
+    - When a user selects a filter and clicks "Pin this view", that filter becomes their persistent default for this post type.
+    - A small pin icon (📌) appears next to the subtitle when a view is pinned.
+    - Clicking "Unpin" or "Use smart default" reverts to automatic logic.
+    - **Pros:** Discoverable, inline with the filter workflow. Simple UI.
+    - **Cons:** Adds one more item to the dropdown.
+
+- [ ] **6D.3** In `PostListCard`, integrate the preference:
+    - On `init()`, the `posts-default-filter` endpoint already checks for a saved preference (6A.3).
+    - When `setFilter()` is called, it just changes the current view — it does **not** auto-save the preference.
+    - Only the explicit "Pin this view" action saves the preference via the REST endpoint.
+    - Show a visual indicator (pin icon on subtitle) when a saved preference is active.
+    - Provide a "Use smart default" option to revert (calls the DELETE endpoint).
+
+#### 6E — Configurable Fields
+
+- [ ] **6E.1** Define a field configuration format used by both PHP (for server-side rendering hints) and JS (for column rendering):
+    ```js
+    // Example field configs for contacts:
+    [
+      { key: 'name', label: 'Name', render: (val, post) => avatarAndName(val, post) },
+      { key: 'overall_status', label: 'Status', render: (val) => statusBadge(val) },
+      { key: 'last_modified', label: 'Last Updated', render: (val) => formatDate(val) },
+    ]
+
+    // Example field configs for groups:
+    [
+      { key: 'name', label: 'Name', render: (val, post) => avatarAndName(val, post) },
+      { key: 'group_status', label: 'Status', render: (val) => statusBadge(val) },
+      { key: 'member_count', label: 'Members', render: (val) => val || '0' },
+      { key: 'last_modified', label: 'Last Updated', render: (val) => formatDate(val) },
+    ]
+    ```
+    - Provide built-in render helpers: `avatarAndName()`, `statusBadge()`, `formatDate()`, `plainText()` — reusable across post types.
+    - The `fields` config is passed to `PostListCard` at instantiation time. New post types can define their own field configs without modifying the shared component.
+
+- [ ] **6E.2** Configuration is passed via HTML `data-` attributes on each post list container element (see Phase 7.1 for the full HTML). This avoids a JS-global config object and keeps each card self-contained. The key data attributes are:
+    - `data-post-type` — the D.T post type slug (e.g., `contacts`, `groups`).
+    - `data-label` — plural display name (e.g., "Contacts").
+    - `data-label-singular` — singular display name (e.g., "Contact").
+    - `data-list-url` — URL to the full list page (e.g., `/contacts`).
+    - `data-new-url` — URL to create a new record (e.g., `/contacts/new`).
+    - `data-fields` — JSON-encoded array of field keys (e.g., `["name","overall_status","last_modified"]`).
+    - `data-limit` — max records to show (e.g., `5`).
+    - In `template.php`, these attributes are rendered server-side using `esc_attr()` for proper escaping.
+    - Plugins can add additional post list containers via a `dt_dashboard_post_lists` filter (which adds new `<section>` elements with the appropriate data attributes to the template output).
+
+---
+
+### Phase 7: Contacts & Groups List Instances
+
+**Goal:** Instantiate the shared `PostListCard` for contacts and groups. This phase is intentionally thin — all logic lives in the shared component from Phase 6.
+
+- [ ] **7.1** Add HTML containers in `template.php`. All configuration is embedded as `data-` attributes on the `<section>` element so the JS component is fully self-initializing:
     ```html
-    <section id="recent-contacts" class="dashboard-card">
-        <div class="section-header">
-            <h2>Contacts (Recently Updated)</h2>
-            <a href="/contacts" class="see-all">See all &gt;</a>
-            <button class="menu-btn">⋮</button>
-            <div class="filter-dropdown hidden">
-                <ul>
-                    <li data-filter="recently_updated" class="active">✓ Recently Updated</li>
-                    <li data-filter="favorites">Favorites</li>
-                    <li data-filter="update_needed">Update Needed</li>
-                    <li data-filter="active">Active</li>
-                </ul>
+    <section id="post-list-contacts"
+             class="dashboard-card post-list-card"
+             data-post-type="contacts"
+             data-label="<?php esc_attr_e( 'Contacts', 'disciple_tools' ); ?>"
+             data-label-singular="<?php esc_attr_e( 'Contact', 'disciple_tools' ); ?>"
+             data-list-url="<?php echo esc_url( site_url( '/contacts' ) ); ?>"
+             data-new-url="<?php echo esc_url( site_url( '/contacts/new' ) ); ?>"
+             data-fields='<?php echo esc_attr( wp_json_encode( [ 'name', 'overall_status', 'last_modified' ] ) ); ?>'
+             data-limit="5">
+        <div class="post-list-header">
+            <div class="post-list-titles">
+                <h2><?php esc_html_e( 'Contacts', 'disciple_tools' ); ?></h2>
+                <span class="post-list-subtitle"></span>
             </div>
+            <a href="<?php echo esc_url( site_url( '/contacts' ) ); ?>" class="see-all-link"><?php esc_html_e( 'See all', 'disciple_tools' ); ?> &gt;</a>
+            <button class="post-list-menu-btn" aria-label="<?php esc_attr_e( 'Filter options', 'disciple_tools' ); ?>">⋮</button>
+            <div class="post-list-menu hidden"></div>
         </div>
-        <div class="contacts-table">
-            <div class="table-header">
-                <span class="col-name">Name</span>
-                <span class="col-status">Status</span>
-                <span class="col-date">Last Updated</span>
+        <div class="post-list-table">
+            <div class="table-header"></div>
+            <div class="table-body"></div>
+        </div>
+    </section>
+
+    <section id="post-list-groups"
+             class="dashboard-card post-list-card"
+             data-post-type="groups"
+             data-label="<?php esc_attr_e( 'Groups', 'disciple_tools' ); ?>"
+             data-label-singular="<?php esc_attr_e( 'Group', 'disciple_tools' ); ?>"
+             data-list-url="<?php echo esc_url( site_url( '/groups' ) ); ?>"
+             data-new-url="<?php echo esc_url( site_url( '/groups/new' ) ); ?>"
+             data-fields='<?php echo esc_attr( wp_json_encode( [ 'name', 'group_status', 'member_count', 'last_modified' ] ) ); ?>'
+             data-limit="5">
+        <div class="post-list-header">
+            <div class="post-list-titles">
+                <h2><?php esc_html_e( 'Groups', 'disciple_tools' ); ?></h2>
+                <span class="post-list-subtitle"></span>
             </div>
+            <a href="<?php echo esc_url( site_url( '/groups' ) ); ?>" class="see-all-link"><?php esc_html_e( 'See all', 'disciple_tools' ); ?> &gt;</a>
+            <button class="post-list-menu-btn" aria-label="<?php esc_attr_e( 'Filter options', 'disciple_tools' ); ?>">⋮</button>
+            <div class="post-list-menu hidden"></div>
+        </div>
+        <div class="post-list-table">
+            <div class="table-header"></div>
             <div class="table-body"></div>
         </div>
     </section>
     ```
-- [ ] **6.2** Styles in `_dashboard.scss`:
-    - `.section-header`: flex row with title, "See all" link, and menu button right-aligned.
-    - `.filter-dropdown`: absolute positioned dropdown below ⋮ button, white background, shadow, z-index.
-    - `.contacts-table .table-header`: grid row with 3 columns, gray text, smaller font.
-    - `.table-body .table-row`: grid row matching header columns, with bottom border, hover highlight, cursor pointer. Each row has an avatar circle (first letter of name or generic icon), name text, a colored `.status-badge` (colored pill — green for Active, orange for Waiting to be accepted, red for Paused, blue for New Contact, etc.), and a date string.
-    - Status badge colors should match existing D.T status colors. Check `dt-assets/scss/` for existing status color definitions.
-    - On mobile: hide the table header, show each contact as a card-style row (name + status badge on one line, date below).
-- [ ] **6.3** Add REST endpoint: `GET dt/v1/dashboard/recent-contacts?filter=recently_updated&limit=8`
-    - Use `DT_Posts::list_posts('contacts', [...])` with `sort=-last_modified`, appropriate filters based on the `filter` param, and `limit`.
-    - For `recently_updated`: sort by `last_modified` desc.
-    - For `favorites`: filter by `favorited` = true.
-    - For `update_needed`: filter by `requires_update` = true.
-    - For `active`: filter by `overall_status` = `active`.
-    - Return: array of `{ id, name, status: { key, label, color }, last_modified, permalink }`.
-- [ ] **6.4** In `dashboard.js`:
-    - On page load, fetch with default filter (`recently_updated`) and render rows into `.table-body`.
-    - Each row is an `<a>` or clickable `<div>` linking to `/contacts/{id}`.
-    - Format dates as "Month Day, Year" (e.g., "Sept 1, 2025") using `Intl.DateTimeFormat` or D.T's existing date formatting utilities.
-    - Wire up ⋮ button to toggle `.filter-dropdown`. On filter selection, re-fetch with new filter, update the active checkmark, and re-render rows.
-    - Show a loading spinner inside `.table-body` during fetch.
-    - If no contacts, show "No contacts found" message.
 
----
+- [ ] **7.2** In `dashboard.js`, auto-discover and instantiate `PostListCard` instances by querying the DOM for all `.post-list-card` elements and reading their `data-` attributes:
+    ```js
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.post-list-card').forEach((el) => {
+        const card = new PostListCard({
+          container: el,
+          postType: el.dataset.postType,
+          label: el.dataset.label,
+          labelSingular: el.dataset.labelSingular,
+          listPageUrl: el.dataset.listUrl,
+          newUrl: el.dataset.newUrl,
+          fields: JSON.parse(el.dataset.fields || '[]'),
+          limit: parseInt(el.dataset.limit, 10) || 5,
+        });
+        card.init();
+      });
+    });
+    ```
+    - This DOM-driven instantiation means adding a new post type list only requires adding a new `<section class="post-list-card">` element with the appropriate `data-` attributes in the template — no JS changes needed.
+    - No `wp_localize_script()` config is needed for post lists; each card is fully self-describing via its HTML attributes.
 
-### Phase 7: Groups (Recently Updated) Table
+- [ ] **7.3** Layout in `_dashboard.scss`:
+    - Desktop: `#post-list-contacts` and `#post-list-groups` sit side-by-side (2-column grid within the dashboard layout, each spanning 6 of 12 columns).
+    - Mobile: stacked vertically, full-width.
 
-**Goal:** Same pattern as Phase 6 but for groups. See the "Groups (Recently Updated)" section in both mockups — same table layout, positioned to the right of Contacts on desktop.
-
-- [ ] **7.1** Add `#recent-groups` HTML to `template.php` — same structure as `#recent-contacts` but with `id="recent-groups"`, title "Groups (Recently Updated)", and link to `/groups`.
-- [ ] **7.2** Reuse the same CSS classes from Phase 6 (`.section-header`, `.filter-dropdown`, `.table-header`, `.table-body`, `.table-row`, `.status-badge`). Add any group-specific overrides to `_dashboard.scss` under `#recent-groups` if needed.
-- [ ] **7.3** Add REST endpoint: `GET dt/v1/dashboard/recent-groups?filter=recently_updated&limit=5`
-    - Use `DT_Posts::list_posts('groups', [...])` with same filter options as contacts but for group fields (`group_status` instead of `overall_status`).
-    - Return same shape: `{ id, name, status: { key, label, color }, last_modified, permalink }`.
-- [ ] **7.4** In `dashboard.js`: Implement with the same fetch/render/filter pattern as contacts. Consider extracting a shared `renderPostTable(sectionId, postType, endpoint)` function to avoid code duplication between Phases 6 and 7.
-- [ ] **7.5** Layout: On desktop, `#recent-contacts` and `#recent-groups` sit side-by-side (2-column grid). On mobile, `#recent-groups` stacks below `#recent-contacts`.
+- [ ] **7.4** Integration test: Verify both cards independently:
+    - Load with smart default filter (updates needed → favorites → active).
+    - Switch filters via the menu — confirm subtitle updates, rows re-render, "See all" link updates.
+    - Test empty state for each filter.
+    - Test pin/unpin preference persistence.
+    - Test with a post type that has no records at all.
 
 ---
 
@@ -291,8 +474,8 @@ Allows users to broadcast their availability for new contact assignments to disp
 | `dt-dashboard/template.php` | Rewrite with full dashboard HTML structure (all section containers) |
 | `dt-dashboard/dashboard.php` | Add script/style enqueues, register REST routes, final slug change |
 | `dt-assets/scss/_dashboard.scss` | Expand with styles for all sections (building on existing foundation) |
-| `dt-dashboard/dashboard.js` | **New** — all dashboard JS (fetch data, render, interactions) |
-| `dt-dashboard/endpoints.php` | **New** — REST API endpoints for all dashboard data |
+| `dt-dashboard/dashboard.js` | **New** — all dashboard JS (fetch data, render, interactions, shared `PostListCard` component) |
+| `dt-dashboard/endpoints.php` | **New** — REST API endpoints for all dashboard data (including generic `post-list` endpoint) |
 
 ### Recommended Implementation Order
 
