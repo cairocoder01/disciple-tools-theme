@@ -339,7 +339,11 @@
                 fields.push(val);
               }
             });
-            current_filter.query['fields'] = fields;
+            if (fields.length > 0) {
+              current_filter.query['fields'] = fields;
+            } else {
+              delete current_filter.query['fields'];
+            }
           } else if (current_filter.query[field_details.id]) {
             let field_values = [];
             $.each(current_filter.query[field_details.id], function (idx, val) {
